@@ -7,7 +7,7 @@
 ![MCP Compatible](https://img.shields.io/badge/MCP-compatible-green.svg)
 ![Gemini CLI](https://img.shields.io/badge/Gemini-CLI-blue.svg)
 
-A lightweight MCP (Model Context Protocol) server that enables Claude Code to interact with Google's Gemini AI through the official CLI. Designed for simplicity, reliability, and seamless integration.
+A lightweight MCP (Model Context Protocol) server that enables AI coding assistants to interact with Google's Gemini AI through the official CLI. Works with Claude Code, Cursor, VS Code, and other MCP-compatible clients. Designed for simplicity, reliability, and seamless integration.
 
 ## ✨ Features
 
@@ -17,6 +17,7 @@ A lightweight MCP (Model Context Protocol) server that enables Claude Code to in
 - **Production Ready**: Robust error handling with configurable 60-second timeouts
 - **Minimal Dependencies**: Only requires `mcp>=1.0.0` and Gemini CLI
 - **Easy Deployment**: Support for both uvx and traditional pip installation
+- **Universal MCP Compatibility**: Works with any MCP-compatible AI coding assistant
 
 ## 🚀 Quick Start
 
@@ -72,6 +73,270 @@ pip install -e .
 # Add to Claude Code (development)
 claude mcp add gemini-bridge-dev -s user -- python -m src
 ```
+
+## 🌐 Multi-Client Support
+
+**Gemini Bridge works with any MCP-compatible AI coding assistant** - the same server supports multiple clients through different configuration methods.
+
+### Supported MCP Clients
+- **Claude Code** ✅ (Default)
+- **Cursor** ✅
+- **VS Code** ✅
+- **Windsurf** ✅
+- **Cline** ✅
+- **Void** ✅
+- **Cherry Studio** ✅
+- **Augment** ✅
+- **Roo Code** ✅
+- **Zencoder** ✅
+- **Any MCP-compatible client** ✅
+
+### Configuration Examples
+
+<details>
+<summary><strong>Claude Code</strong> (Default)</summary>
+
+```bash
+# Recommended installation
+claude mcp add gemini-bridge -s user -- uvx gemini-bridge
+
+# Development installation
+claude mcp add gemini-bridge-dev -s user -- python -m src
+```
+
+</details>
+
+<details>
+<summary><strong>Cursor</strong></summary>
+
+**Global Configuration** (`~/.cursor/mcp.json`):
+```json
+{
+  "mcpServers": {
+    "gemini-bridge": {
+      "command": "uvx",
+      "args": ["gemini-bridge"],
+      "env": {}
+    }
+  }
+}
+```
+
+**Project-Specific** (`.cursor/mcp.json` in your project):
+```json
+{
+  "mcpServers": {
+    "gemini-bridge": {
+      "command": "uvx",
+      "args": ["gemini-bridge"],
+      "env": {}
+    }
+  }
+}
+```
+
+Go to: `Settings` → `Cursor Settings` → `MCP` → `Add new global MCP server`
+
+</details>
+
+<details>
+<summary><strong>VS Code</strong></summary>
+
+**Configuration** (`.vscode/mcp.json` in your workspace):
+```json
+{
+  "servers": {
+    "gemini-bridge": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": ["gemini-bridge"]
+    }
+  }
+}
+```
+
+**Alternative: Through Extensions**
+1. Open Extensions view (Ctrl+Shift+X)
+2. Search for MCP extensions
+3. Add custom server with command: `uvx gemini-bridge`
+
+</details>
+
+<details>
+<summary><strong>Windsurf</strong></summary>
+
+Add to your Windsurf MCP configuration:
+```json
+{
+  "mcpServers": {
+    "gemini-bridge": {
+      "command": "uvx",
+      "args": ["gemini-bridge"],
+      "env": {}
+    }
+  }
+}
+```
+
+</details>
+
+<details>
+<summary><strong>Cline</strong> (VS Code Extension)</summary>
+
+1. Open Cline and click **MCP Servers** in the top navigation
+2. Select **Installed** tab → **Advanced MCP Settings**
+3. Add to `cline_mcp_settings.json`:
+
+```json
+{
+  "mcpServers": {
+    "gemini-bridge": {
+      "command": "uvx",
+      "args": ["gemini-bridge"],
+      "env": {}
+    }
+  }
+}
+```
+
+</details>
+
+<details>
+<summary><strong>Void</strong></summary>
+
+Go to: `Settings` → `MCP` → `Add MCP Server`
+
+```json
+{
+  "mcpServers": {
+    "gemini-bridge": {
+      "command": "uvx",
+      "args": ["gemini-bridge"],
+      "env": {}
+    }
+  }
+}
+```
+
+</details>
+
+<details>
+<summary><strong>Cherry Studio</strong></summary>
+
+1. Navigate to **Settings → MCP Servers → Add Server**
+2. Fill in the server details:
+   - **Name**: `gemini-bridge`
+   - **Type**: `STDIO`
+   - **Command**: `uvx`
+   - **Arguments**: `["gemini-bridge"]`
+3. Save the configuration
+
+</details>
+
+<details>
+<summary><strong>Augment</strong></summary>
+
+**Using the UI:**
+1. Click hamburger menu → **Settings** → **Tools**
+2. Click **+ Add MCP** button
+3. Enter command: `uvx gemini-bridge`
+4. Name: **Gemini Bridge**
+
+**Manual Configuration:**
+```json
+"augment.advanced": { 
+  "mcpServers": [ 
+    { 
+      "name": "gemini-bridge", 
+      "command": "uvx", 
+      "args": ["gemini-bridge"],
+      "env": {}
+    }
+  ]
+}
+```
+
+</details>
+
+<details>
+<summary><strong>Roo Code</strong></summary>
+
+1. Go to **Settings → MCP Servers → Edit Global Config**
+2. Add to `mcp_settings.json`:
+
+```json
+{
+  "mcpServers": {
+    "gemini-bridge": {
+      "command": "uvx",
+      "args": ["gemini-bridge"],
+      "env": {}
+    }
+  }
+}
+```
+
+</details>
+
+<details>
+<summary><strong>Zencoder</strong></summary>
+
+1. Go to Zencoder menu (...) → **Tools** → **Add Custom MCP**
+2. Add configuration:
+
+```json
+{
+  "command": "uvx",
+  "args": ["gemini-bridge"],
+  "env": {}
+}
+```
+
+3. Hit the **Install** button
+
+</details>
+
+<details>
+<summary><strong>Alternative Installation Methods</strong></summary>
+
+**For pip-based installations:**
+```json
+{
+  "command": "gemini-bridge",
+  "args": [],
+  "env": {}
+}
+```
+
+**For development/local testing:**
+```json
+{
+  "command": "python",
+  "args": ["-m", "src"],
+  "env": {},
+  "cwd": "/path/to/gemini-bridge"
+}
+```
+
+**For npm-style installation** (if needed):
+```json
+{
+  "command": "npx",
+  "args": ["gemini-bridge"],
+  "env": {}
+}
+```
+
+</details>
+
+### Universal Usage
+
+Once configured with any client, use the same two tools:
+
+1. **Ask general questions**: "What authentication patterns are used in this codebase?"
+2. **Analyze specific files**: "Review these auth files for security issues"
+
+**The server implementation is identical** - only the client configuration differs!
 
 ## 🛠️ Available Tools
 
