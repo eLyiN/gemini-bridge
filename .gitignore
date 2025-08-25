@@ -78,9 +78,8 @@ docs/_build/
 .dmypy.json
 dmypy.json
 
-# Claude
-.claude
-CLAUDE.md
+# Claude directory (but allow CLAUDE.md)
+.claude/
 
 # Node.js (if any JavaScript tools are used)
 node_modules/
