@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "gemini-bridge"
-version = "1.0.0"
+version = "1.0.1"
 description = "Lightweight MCP server bridging Claude Code to Google's Gemini AI via official CLI"
 readme = "README.md"
 license = "MIT"
@@ -31,9 +31,9 @@ dependencies = [
 gemini-bridge = "src:main"
 
 [project.urls]
-Homepage = "https://github.com/shelakh/gemini-bridge"
-Repository = "https://github.com/shelakh/gemini-bridge"
-Issues = "https://github.com/shelakh/gemini-bridge/issues"
+Homepage = "https://github.com/eLyiN/gemini-bridge"
+Repository = "https://github.com/eLyiN/gemini-bridge"
+Issues = "https://github.com/eLyiN/gemini-bridge/issues"
 
 [tool.setuptools.packages.find]
 where = ["."]
