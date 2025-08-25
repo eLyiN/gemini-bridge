@@ -2,7 +2,7 @@
 
 ![PyPI Version](https://img.shields.io/pypi/v/gemini-bridge)
 ![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)
+![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)
 ![MCP Compatible](https://img.shields.io/badge/MCP-compatible-green.svg)
 ![CI Status](https://github.com/shelakh/gemini-bridge/actions/workflows/ci.yml/badge.svg)
 
