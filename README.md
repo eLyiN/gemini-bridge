@@ -7,8 +7,6 @@
 ![MCP Compatible](https://img.shields.io/badge/MCP-compatible-green.svg)
 ![Gemini CLI](https://img.shields.io/badge/Gemini-CLI-blue.svg)
 
-[![Open in GitHub Codespaces](https://img.shields.io/badge/Open%20in-GitHub%20Codespaces-blue?logo=github&logoColor=white)](https://github.com/shelakh/gemini-bridge/blob/main/README.md)
-
 A lightweight MCP (Model Context Protocol) server that enables Claude Code to interact with Google's Gemini AI through the official CLI. Designed for simplicity, reliability, and seamless integration.
 
 ## ✨ Features
