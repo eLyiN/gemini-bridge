@@ -1,11 +1,10 @@
 # Gemini Bridge
 
+![CI Status](https://github.com/eLyiN/gemini-bridge/actions/workflows/ci.yml/badge.svg)
 ![PyPI Version](https://img.shields.io/pypi/v/gemini-bridge)
 ![MIT License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)
 ![MCP Compatible](https://img.shields.io/badge/MCP-compatible-green.svg)
-![CI Status](https://github.com/shelakh/gemini-bridge/actions/workflows/ci.yml/badge.svg)
-
 A lightweight MCP (Model Context Protocol) server that enables Claude Code to interact with Google's Gemini AI through the official CLI. Designed for simplicity, reliability, and seamless integration.
 
 ## ✨ Features
@@ -158,8 +157,6 @@ gemini-bridge/
 │   ├── __main__.py              # Module execution entry point
 │   └── mcp_server.py            # Main MCP server implementation
 ├── .github/                     # GitHub templates and workflows
-├── start_server_uvx.sh         # Production startup script
-├── start_server_dev.sh         # Development startup script
 ├── pyproject.toml              # Python package configuration
 ├── README.md                   # This file
 ├── CONTRIBUTING.md             # Contribution guidelines
@@ -234,7 +231,7 @@ See [CHANGELOG.md](CHANGELOG.md) for detailed version history.
 
 - **Issues**: Report bugs or request features via [GitHub Issues](https://github.com/shelakh/gemini-bridge/issues)
 - **Discussions**: Join the community discussion
-- **Documentation**: Additional docs available in the `docs/` directory
+- **Documentation**: Additional docs can be created in the `docs/` directory
 
 ---
 
