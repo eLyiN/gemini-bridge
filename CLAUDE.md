@@ -80,7 +80,7 @@ python -c "import src; print('Package works!')"
 ### Core Design Principles
 - **CLI-First**: Direct subprocess calls to `gemini` command
 - **Stateless**: Each tool call is independent with no session state
-- **Fixed Timeout**: 60-second maximum execution time per query
+- **Configurable Timeout**: Default 60-second execution time (configurable via GEMINI_BRIDGE_TIMEOUT)
 - **Fail-Fast**: Clear error messages with simple error handling
 - **Zero Dependencies**: Only `mcp>=1.0.0` and external Gemini CLI
 
@@ -143,8 +143,9 @@ gemini-bridge/
   - Solution: `npm install -g @google/gemini-cli`
 - **"Authentication required"**: Not logged into Gemini
   - Solution: `gemini auth login`
-- **"Timeout after 60 seconds"**: Query too complex or large files
-  - Solution: Break into smaller parts or reduce file size
+- **"Timeout after X seconds"**: Query too complex or large files
+  - Solution: Increase timeout with GEMINI_BRIDGE_TIMEOUT environment variable
+  - Alternative: Break into smaller parts or reduce file size
 - **"Directory does not exist"**: Invalid directory parameter
   - Solution: Use absolute paths or verify directory exists
 - **"No files provided"**: Missing files parameter for file-attachment mode
@@ -173,7 +174,7 @@ gemini-bridge/
 ### Performance Characteristics
 - **Startup Time**: Near-instant MCP server startup
 - **Memory Usage**: Minimal memory footprint (~10MB)
-- **Execution Time**: Limited by 60-second timeout
+- **Execution Time**: Limited by configurable timeout (default: 60 seconds)
 - **Scalability**: Stateless design allows multiple concurrent requests
 
 ## Package Information
@@ -191,9 +192,22 @@ gemini-bridge/
 
 ### Configuration
 - **Default Model**: gemini-2.5-flash for optimal performance
-- **Timeout**: 60 seconds for all CLI operations
+- **Timeout**: Configurable via GEMINI_BRIDGE_TIMEOUT environment variable (default: 60 seconds)
 - **Working Directory**: Configurable per request
 - **File Encoding**: UTF-8 with error handling
+
+#### Timeout Configuration
+Set the `GEMINI_BRIDGE_TIMEOUT` environment variable to customize execution timeout:
+
+```bash
+# Example: 2-minute timeout for large file analysis
+claude mcp add gemini-bridge -s user --env GEMINI_BRIDGE_TIMEOUT=120 -- uvx gemini-bridge
+```
+
+**Valid Values:**
+- Positive integers (seconds)
+- Default: 60 seconds if not set or invalid
+- Recommended: 120-300 seconds for large files or complex queries
 
 ## Security Considerations
 
