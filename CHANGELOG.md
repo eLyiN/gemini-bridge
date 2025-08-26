@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.2] - 2025-08-26
+
+### Added
+- **Configurable Timeout**: Added `GEMINI_BRIDGE_TIMEOUT` environment variable support
+  - Users can now configure timeout values for longer queries (large files, complex analysis)
+  - Default remains 60 seconds for backward compatibility
+  - Invalid values fall back to default with proper logging warnings
+- **Improved Error Messages**: Timeout error messages now display actual timeout value used
+- **Enhanced Documentation**: Added comprehensive timeout configuration examples in README.md and CLAUDE.md
+
+### Changed
+- **Warning System**: Replaced `print()` statements with proper `logging.warning()` for library code
+- **Error Handling**: Timeout validation with clear feedback for invalid environment variable values
+
+### Technical Details
+- Added `_get_timeout()` function for environment variable handling
+- Updated both `execute_gemini_simple()` and `execute_gemini_with_files()` to use configurable timeout
+- Maintains extreme simplicity principles while solving user-reported timeout issues
+
 ## [1.0.0] - 2025-08-24
 
 ### Added

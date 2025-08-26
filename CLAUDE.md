@@ -227,7 +227,7 @@ claude mcp add gemini-bridge -s user --env GEMINI_BRIDGE_TIMEOUT=120 -- uvx gemi
 
 ### Version Management
 - **Semantic Versioning**: MAJOR.MINOR.PATCH format
-- **Current Version**: 1.0.0 (check `src/__init__.py`)
+- **Current Version**: 1.0.2 (check `src/__init__.py`)
 - **Release Tags**: Git tags trigger automated PyPI publishing
 
 ### Deployment Options
