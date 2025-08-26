@@ -338,6 +338,49 @@ Once configured with any client, use the same two tools:
 
 **The server implementation is identical** - only the client configuration differs!
 
+## ⚙️ Configuration
+
+### Timeout Configuration
+
+By default, Gemini Bridge uses a 60-second timeout for all CLI operations. For longer queries (large files, complex analysis), you can configure a custom timeout using the `GEMINI_BRIDGE_TIMEOUT` environment variable.
+
+**Example configurations:**
+
+<details>
+<summary><strong>Claude Code</strong></summary>
+
+```bash
+# Add with custom timeout (120 seconds)
+claude mcp add gemini-bridge -s user --env GEMINI_BRIDGE_TIMEOUT=120 -- uvx gemini-bridge
+```
+
+</details>
+
+<details>
+<summary><strong>Manual Configuration (mcp_settings.json)</strong></summary>
+
+```json
+{
+  "mcpServers": {
+    "gemini-bridge": {
+      "command": "uvx",
+      "args": ["gemini-bridge"],
+      "env": {
+        "GEMINI_BRIDGE_TIMEOUT": "120"
+      }
+    }
+  }
+}
+```
+
+</details>
+
+**Timeout Options:**
+- **Default**: 60 seconds (if not configured)
+- **Range**: Any positive integer (seconds)
+- **Recommended**: 120-300 seconds for large file analysis
+- **Invalid values**: Fall back to 60 seconds with warning
+
 ## 🛠️ Available Tools
 
 ### `consult_gemini`

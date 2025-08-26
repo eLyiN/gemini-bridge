@@ -40,6 +40,29 @@ def _normalize_model_name(model: Optional[str]) -> str:
     return "gemini-2.5-flash"
 
 
+def _get_timeout() -> int:
+    """
+    Get the timeout value from environment variable GEMINI_BRIDGE_TIMEOUT.
+    Defaults to 60 seconds if not set or invalid.
+    
+    Returns:
+        Timeout value in seconds (positive integer)
+    """
+    timeout_str = os.getenv("GEMINI_BRIDGE_TIMEOUT")
+    if not timeout_str:
+        return 60
+    
+    try:
+        timeout = int(timeout_str)
+        if timeout <= 0:
+            print(f"Warning: Invalid GEMINI_BRIDGE_TIMEOUT value '{timeout_str}' (must be positive). Using default 60 seconds.")
+            return 60
+        return timeout
+    except ValueError:
+        print(f"Warning: Invalid GEMINI_BRIDGE_TIMEOUT value '{timeout_str}' (must be integer). Using default 60 seconds.")
+        return 60
+
+
 def execute_gemini_simple(query: str, directory: str = ".", model: Optional[str] = None) -> str:
     """
     Execute gemini CLI command for simple queries without file attachments.
@@ -65,13 +88,14 @@ def execute_gemini_simple(query: str, directory: str = ".", model: Optional[str]
     cmd = ["gemini", "-m", selected_model]
     
     # Execute CLI command - simple timeout, no retries
+    timeout = _get_timeout()
     try:
         result = subprocess.run(
             cmd,
             cwd=directory,
             capture_output=True,
             text=True,
-            timeout=60,
+            timeout=timeout,
             input=query
         )
         
@@ -81,7 +105,7 @@ def execute_gemini_simple(query: str, directory: str = ".", model: Optional[str]
             return f"Gemini CLI Error: {result.stderr.strip()}"
             
     except subprocess.TimeoutExpired:
-        return "Error: Gemini CLI command timed out after 60 seconds"
+        return f"Error: Gemini CLI command timed out after {timeout} seconds"
     except Exception as e:
         return f"Error executing Gemini CLI: {str(e)}"
 
@@ -136,13 +160,14 @@ def execute_gemini_with_files(query: str, directory: str = ".", files: Optional[
     stdin_content = "\n\n".join(file_contents) + "\n\n" + query
     
     # Execute CLI command - simple timeout, no retries
+    timeout = _get_timeout()
     try:
         result = subprocess.run(
             cmd,
             cwd=directory,
             capture_output=True,
             text=True,
-            timeout=60,
+            timeout=timeout,
             input=stdin_content
         )
         
@@ -152,7 +177,7 @@ def execute_gemini_with_files(query: str, directory: str = ".", files: Optional[
             return f"Gemini CLI Error: {result.stderr.strip()}"
             
     except subprocess.TimeoutExpired:
-        return "Error: Gemini CLI command timed out after 60 seconds"
+        return f"Error: Gemini CLI command timed out after {timeout} seconds"
     except Exception as e:
         return f"Error executing Gemini CLI: {str(e)}"
 
