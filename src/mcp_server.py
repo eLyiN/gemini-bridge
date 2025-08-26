@@ -234,7 +234,12 @@ def consult_gemini_with_files(
 
 def main():
     """Entry point for the MCP server."""
-    mcp.run()
+    # Setup any configuration from Smithery if needed
+    # Smithery passes config via environment and query parameters
+    port = int(os.getenv("PORT", "8080"))
+    
+    # Run the MCP server with HTTP transport
+    mcp.run(transport="http", port=port)
 
 
 if __name__ == "__main__":
