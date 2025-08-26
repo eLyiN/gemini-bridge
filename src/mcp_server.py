@@ -6,6 +6,7 @@ A minimal MCP server to interface with Gemini AI via the gemini CLI.
 Created by @shelakh/elyin
 """
 
+import logging
 import os
 import shutil
 import subprocess
@@ -55,11 +56,11 @@ def _get_timeout() -> int:
     try:
         timeout = int(timeout_str)
         if timeout <= 0:
-            print(f"Warning: Invalid GEMINI_BRIDGE_TIMEOUT value '{timeout_str}' (must be positive). Using default 60 seconds.")
+            logging.warning("Invalid GEMINI_BRIDGE_TIMEOUT value '%s' (must be positive). Using default 60 seconds.", timeout_str)
             return 60
         return timeout
     except ValueError:
-        print(f"Warning: Invalid GEMINI_BRIDGE_TIMEOUT value '{timeout_str}' (must be integer). Using default 60 seconds.")
+        logging.warning("Invalid GEMINI_BRIDGE_TIMEOUT value '%s' (must be integer). Using default 60 seconds.", timeout_str)
         return 60
 
 
