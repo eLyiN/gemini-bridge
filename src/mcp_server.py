@@ -10,6 +10,7 @@ import logging
 import os
 import shutil
 import subprocess
+import sys
 from typing import List, Optional
 
 from mcp.server.fastmcp import FastMCP
@@ -331,10 +332,9 @@ def get_debug_info() -> str:
         debug_info.append(f"  ✗ Install with: npm install -g @google/gemini-cli")
     
     debug_info.append("")
-    
-    # Environment information
-    debug_info.append(f"Environment:")
-    debug_info.append(f"  Python version: {subprocess.sys.version.split()[0]}")
+    # Environment details
+    debug_info.append("Environment:")
+    debug_info.append(f"  Python version: {sys.version.split()[0]}")
     debug_info.append(f"  Current working directory: {os.getcwd()}")
     debug_info.append(f"  PORT: {os.getenv('PORT', '8080')}")
     
@@ -348,9 +348,9 @@ def get_debug_info() -> str:
             cwd="."
         )
         if result.returncode == 0:
-            debug_info.append(f"  Authentication: ✓ Logged in")
+            debug_info.append("  Authentication: ✓ Logged in")
         else:
-            debug_info.append(f"  Authentication: ✗ Not logged in - run 'gemini auth login'")
+            debug_info.append("  Authentication: ✗ Not logged in - run 'gemini auth login'")
     except Exception as e:
         debug_info.append(f"  Authentication status check failed: {str(e)}")
     
