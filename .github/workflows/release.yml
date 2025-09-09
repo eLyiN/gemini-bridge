@@ -84,5 +84,5 @@ jobs:
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
         # Use Trusted Publishing (no password needed)
-        # Configure at: https://pypi.org/manage/project/codex-bridge/settings/publishing/
+        # Configure at: https://pypi.org/manage/project/gemini-bridge/settings/publishing/
         attestations: true
