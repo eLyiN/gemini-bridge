@@ -513,10 +513,83 @@ gemini --version
 - Ensure Claude Code MCP configuration is correct
 - Check that the `gemini` command is in your PATH
 
+### Timeout Issues 🔥
+
+Gemini Bridge now includes comprehensive timeout debugging. If you're experiencing timeout issues:
+
+**1. Use the Debug Tool**
+```python
+# Get detailed diagnostics about your configuration
+get_debug_info()
+```
+
+This will show:
+- Current timeout configuration
+- Gemini CLI status and version
+- Authentication status
+- Environment variables
+- System information
+
+**2. Configure Appropriate Timeout**
+
+For different operation types, recommended timeouts:
+
+- **Default operations**: 60 seconds (default)
+- **Large file analysis**: 240 seconds
+- **Complex multi-file operations**: 300+ seconds
+
+**Configuration Examples:**
+
+```bash
+# Claude Code with 4-minute timeout for large operations
+claude mcp add gemini-bridge -s user --env GEMINI_BRIDGE_TIMEOUT=240 -- uvx gemini-bridge
+
+# Environment variable (if running manually)
+export GEMINI_BRIDGE_TIMEOUT=240
+```
+
+**3. Common Timeout Scenarios**
+
+| Scenario | Recommended Timeout | Reason |
+|----------|-------------------|---------|
+| Single file < 10KB | 60s (default) | Fast processing |
+| Multiple files or large files | 240s | More content to process |
+| Complex code analysis | 300s | Deep reasoning required |
+| Very large files (>100KB) | 300-600s | Processing overhead |
+
+**4. Debugging Steps**
+
+1. **Check your configuration**:
+   ```bash
+   # Run the debug tool to see current timeout
+   # Look for "Actual timeout used" in the output
+   ```
+
+2. **Monitor logs**: The server now logs detailed timing information
+
+3. **Test with smaller queries**: If large queries timeout, break them into smaller parts
+
+4. **Verify Gemini CLI performance**: Test `gemini` directly with similar queries
+
+**5. Advanced Troubleshooting**
+
+If timeouts persist even with high timeout values:
+
+- **Network issues**: Check your internet connection
+- **Gemini CLI version**: Update with `npm install -g @google/gemini-cli@latest`  
+- **Authentication**: Re-authenticate with `gemini auth login`
+- **System resources**: Check if your system is under high load
+- **File encoding**: Ensure files are UTF-8 encoded
+- **MCP client timeout**: Some clients have their own timeout settings
+
 ### Common Error Messages
 - **"CLI not available"**: Gemini CLI is not installed or not in PATH
 - **"Authentication required"**: Run `gemini auth login`
-- **"Timeout after 60 seconds"**: Query took too long, try breaking it into smaller parts
+- **"Timeout after X seconds"**: Operation took longer than configured timeout
+  - Solution: Increase `GEMINI_BRIDGE_TIMEOUT` environment variable
+  - For immediate testing: Use smaller files or simpler queries
+- **"Large content size warning"**: Files total >100KB, may need longer timeout
+- **"Very high timeout configured"**: Timeout >300s, failed operations will wait long
 
 ## 🤝 Contributing
 

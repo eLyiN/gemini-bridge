@@ -136,26 +136,84 @@ gemini-bridge/
 - **File Handling**: Reads files, concatenates with headers, passes to Gemini
 - **Example**: Code reviews, debugging specific files, analyzing project structure
 
+### `get_debug_info`
+- **Purpose**: Diagnostic tool for troubleshooting timeout and configuration issues
+- **Parameters**: None required
+- **Use Case**: Debugging timeout problems, verifying setup, system diagnostics
+- **Output**: Comprehensive debug information including:
+  - Current timeout configuration and recommendations
+  - Gemini CLI status, version, and authentication
+  - Environment variables and system information
+  - Configuration validation and warnings
+- **Example**: Run when experiencing timeout issues or setup problems
+
 ## Error Handling & Troubleshooting
+
+### Diagnostic Tools
+
+**Primary Diagnostic Tool**: Use `get_debug_info()` MCP tool for comprehensive system diagnostics. This tool provides:
+- Timeout configuration analysis with recommendations
+- Gemini CLI version and authentication status  
+- Environment variable validation
+- System status and warnings
 
 ### Common Error Patterns
 - **"CLI not available"**: Gemini CLI not installed or not in PATH
   - Solution: `npm install -g @google/gemini-cli`
 - **"Authentication required"**: Not logged into Gemini
   - Solution: `gemini auth login`
-- **"Timeout after X seconds"**: Query too complex or large files
-  - Solution: Increase timeout with GEMINI_BRIDGE_TIMEOUT environment variable
-  - Alternative: Break into smaller parts or reduce file size
+- **"Timeout after X seconds"**: Query took longer than configured timeout
+  - **Immediate Solution**: Increase GEMINI_BRIDGE_TIMEOUT environment variable
+  - **Recommended Values**: 
+    - Default operations: 60s
+    - Large file analysis: 240s
+    - Complex multi-file operations: 300s+
+  - **Alternative**: Break queries into smaller parts or reduce file size
+- **"Large content size warning"**: Files total >100KB, may cause timeouts
+  - Solution: Increase timeout or reduce file count/size
 - **"Directory does not exist"**: Invalid directory parameter
   - Solution: Use absolute paths or verify directory exists
 - **"No files provided"**: Missing files parameter for file-attachment mode
   - Solution: Provide at least one valid file path
 
+### Advanced Timeout Troubleshooting
+
+**Timeout Configuration Priority**:
+1. Check environment variable: `GEMINI_BRIDGE_TIMEOUT`
+2. Validate value is positive integer
+3. Default to 60 seconds if invalid/missing
+4. Log configuration at startup for visibility
+
+**Debugging Timeout Issues**:
+1. **Run Diagnostics**: Use `get_debug_info()` tool first
+2. **Check Logs**: Server now logs detailed timing and content size information
+3. **Verify Configuration**: Ensure GEMINI_BRIDGE_TIMEOUT is properly set
+4. **Test Incremental**: Start with small queries, gradually increase complexity
+5. **Monitor Content Size**: Large files (>100KB total) need higher timeouts
+6. **Verify CLI Performance**: Test `gemini` command directly with similar content
+
+**Timeout Recommendations by Use Case**:
+```bash
+# Basic code queries (default)
+GEMINI_BRIDGE_TIMEOUT=60
+
+# Large file analysis (recommended for your 240s use case)
+GEMINI_BRIDGE_TIMEOUT=240  
+
+# Complex multi-file analysis
+GEMINI_BRIDGE_TIMEOUT=300
+
+# Very large codebases or detailed analysis
+GEMINI_BRIDGE_TIMEOUT=600
+```
+
 ### Debugging Steps
-1. **Verify Gemini CLI**: `gemini --version`
-2. **Test Authentication**: `gemini "Hello"`
-3. **Check Package**: `python -c "import src; print('OK')"`
-4. **Test MCP Tools**: Use simple queries first, then add complexity
+1. **Run Diagnostic Tool**: `get_debug_info()` - Check all configuration
+2. **Verify Gemini CLI**: `gemini --version`
+3. **Test Authentication**: `gemini "Hello"`
+4. **Check Environment**: Verify GEMINI_BRIDGE_TIMEOUT is set correctly
+5. **Monitor Logs**: Check server logs for timing information
+6. **Test Progressive**: Start small, increase complexity gradually
 
 ## Development Guidelines
 
