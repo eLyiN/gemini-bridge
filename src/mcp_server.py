@@ -55,26 +55,37 @@ def _get_timeout() -> int:
         Timeout value in seconds (positive integer)
     """
     timeout_str = os.getenv("GEMINI_BRIDGE_TIMEOUT")
-    logger.debug(f"Reading timeout from environment: GEMINI_BRIDGE_TIMEOUT={timeout_str}")
-    
+    logger.debug(
+        "Reading timeout from environment: GEMINI_BRIDGE_TIMEOUT=%s", timeout_str
+    )
+
     if not timeout_str:
         logger.info("GEMINI_BRIDGE_TIMEOUT not set, using default 60 seconds")
         return 60
-    
+
     try:
         timeout = int(timeout_str)
-        if timeout <= 0:
-            logger.warning(f"Invalid GEMINI_BRIDGE_TIMEOUT value '{timeout_str}' (must be positive). Using default 60 seconds.")
-            return 60
-        
-        logger.info(f"Using configured timeout: {timeout} seconds")
-        if timeout > 300:
-            logger.warning(f"Large timeout configured ({timeout}s). This may cause long waits for failed operations.")
-        return timeout
     except ValueError:
-        logger.warning(f"Invalid GEMINI_BRIDGE_TIMEOUT value '{timeout_str}' (must be integer). Using default 60 seconds.")
+        logger.warning(
+            "Invalid GEMINI_BRIDGE_TIMEOUT value '%s' (must be integer). Using default 60 seconds.",
+            timeout_str,
+        )
         return 60
 
+    if timeout <= 0:
+        logger.warning(
+            "Invalid GEMINI_BRIDGE_TIMEOUT value '%s' (must be positive). Using default 60 seconds.",
+            timeout_str,
+        )
+        return 60
+
+    logger.info("Using configured timeout: %s seconds", timeout)
+    if timeout > 300:
+        logger.warning(
+            "Large timeout configured (%ss). This may cause long waits for failed operations.",
+            timeout,
+        )
+    return timeout
 
 def execute_gemini_simple(query: str, directory: str = ".", model: Optional[str] = None) -> str:
     """
@@ -292,24 +303,24 @@ def get_debug_info() -> str:
     # Timeout configuration
     timeout_env = os.getenv("GEMINI_BRIDGE_TIMEOUT")
     actual_timeout = _get_timeout()
-    debug_info.append(f"Timeout Configuration:")
+    debug_info.append("Timeout Configuration:")
     debug_info.append(f"  GEMINI_BRIDGE_TIMEOUT env var: {timeout_env or 'not set'}")
     debug_info.append(f"  Actual timeout used: {actual_timeout} seconds")
     
     if actual_timeout == 60 and not timeout_env:
-        debug_info.append(f"  ⚠️  Using default timeout. Set GEMINI_BRIDGE_TIMEOUT=240 for large operations.")
+        debug_info.append("  ⚠️  Using default timeout. Set GEMINI_BRIDGE_TIMEOUT=240 for large operations.")
     elif actual_timeout < 120:
-        debug_info.append(f"  ⚠️  Timeout may be too low for large files or complex queries.")
+        debug_info.append("  ⚠️  Timeout may be too low for large files or complex queries.")
     elif actual_timeout > 300:
         debug_info.append(f"  ⚠️  Very high timeout configured. Failed operations will wait {actual_timeout}s.")
     else:
-        debug_info.append(f"  ✓ Timeout looks reasonable for most operations.")
+        debug_info.append("  ✓ Timeout looks reasonable for most operations.")
     
     debug_info.append("")
     
     # Gemini CLI status
     gemini_path = shutil.which("gemini")
-    debug_info.append(f"Gemini CLI Status:")
+    debug_info.append("Gemini CLI Status:")
     debug_info.append(f"  CLI available: {'✓ Yes' if gemini_path else '✗ No'}")
     if gemini_path:
         debug_info.append(f"  CLI path: {gemini_path}")
@@ -329,7 +340,7 @@ def get_debug_info() -> str:
         except Exception as e:
             debug_info.append(f"  CLI version check error: {str(e)}")
     else:
-        debug_info.append(f"  ✗ Install with: npm install -g @google/gemini-cli")
+        debug_info.append("  ✗ Install with: npm install -g @google/gemini-cli")
     
     debug_info.append("")
     # Environment details
@@ -362,7 +373,7 @@ def get_debug_info() -> str:
         "GOOGLE_APPLICATION_CREDENTIALS", "GOOGLE_CLOUD_PROJECT"
     ]
     
-    debug_info.append(f"Relevant Environment Variables:")
+    debug_info.append("Relevant Environment Variables:")
     for var in relevant_env_vars:
         value = os.getenv(var)
         if value:
@@ -387,8 +398,8 @@ def main():
     logger.info(f"Configured timeout: {timeout} seconds")
     logger.info(f"Gemini CLI available: {shutil.which('gemini') is not None}")
     
-    # Run the MCP server with HTTP transport
-    mcp.run(transport="http", port=port)
+    # Run the MCP server with SSE transport (port is managed by the library)
+    mcp.run(transport="sse")
 
 
 if __name__ == "__main__":
