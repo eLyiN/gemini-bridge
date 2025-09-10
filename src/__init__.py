@@ -5,5 +5,5 @@ Version 1.0.0 - Production ready, radically simplified.
 
 from .mcp_server import main
 
-__version__ = "1.0.2"
+__version__ = "1.0.3"
 __all__ = ["main"]
