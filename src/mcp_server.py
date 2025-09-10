@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Gemini MCP Server - Simple CLI Bridge
-Version 1.0.3
+Version 1.0.5
 A minimal MCP server to interface with Gemini AI via the gemini CLI.
 Created by @shelakh/elyin
 """
