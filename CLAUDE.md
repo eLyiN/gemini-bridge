@@ -10,6 +10,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - Zero API costs (uses free Gemini CLI)
 - Stateless architecture with no session management
 - Direct subprocess integration for optimal performance
+- Inline file guardrails with optional delegation to Gemini CLI's `@path` expansion
 - Production-ready with professional CI/CD automation
 
 ## Development Commands
@@ -60,6 +61,9 @@ python -c "from src.mcp_server import execute_gemini_simple; print(execute_gemin
 
 # Test package installation
 python -c "import src; print(f'Gemini Bridge v{src.__version__}')"
+
+# Run automated tests
+pytest
 ```
 
 ### Build & Distribution
@@ -80,18 +84,19 @@ python -c "import src; print('Package works!')"
 ### Core Design Principles
 - **CLI-First**: Direct subprocess calls to `gemini` command
 - **Stateless**: Each tool call is independent with no session state
-- **Configurable Timeout**: Default 60-second execution time (configurable via GEMINI_BRIDGE_TIMEOUT)
+- **Adaptive Timeout**: Defaults to 60 seconds; override via env var or `timeout_seconds`
+- **Attachment Guardrails**: Inline mode enforces byte/quantity caps; `at_command` mode lets Gemini CLI manage files
 - **Fail-Fast**: Clear error messages with simple error handling
 - **Zero Dependencies**: Only `mcp>=1.0.0` and external Gemini CLI
 
 ### Key Components
 
 **`src/mcp_server.py`** - Main server implementation
-- `consult_gemini(query, directory, model)` - Simple CLI bridge
-- `consult_gemini_with_files(query, directory, files, model)` - File-attachment support
+- `consult_gemini(query, directory, model, timeout_seconds)` - Simple CLI bridge
+- `consult_gemini_with_files(query, directory, files, model, timeout_seconds, mode)` - File-attachment support with inline/`@` toggle
 - `_normalize_model_name()` - Model name normalization (flash/pro)
-- `execute_gemini_simple()` - Core CLI execution
-- `execute_gemini_with_files()` - File-aware CLI execution
+- `_prepare_inline_payload()` / `_prepare_at_command_prompt()` - File preprocessing helpers with safeguards
+- `execute_gemini_simple()` / `execute_gemini_with_files()` - Core CLI execution with per-call timeout overrides
 
 **Model Support:**
 - Default: `gemini-2.5-flash` (optimal performance/cost)
@@ -122,6 +127,7 @@ gemini-bridge/
   - `query` (required): The question or prompt to send to Gemini
   - `directory` (required): Working directory for the query
   - `model` (optional): Model name (flash, pro, or custom)
+  - `timeout_seconds` (optional): Override execution timeout for this call
 - **Use Case**: General questions, code analysis without file attachments
 - **Example**: General programming questions, code explanations
 
@@ -132,8 +138,10 @@ gemini-bridge/
   - `directory` (required): Working directory for the query  
   - `files` (required list): List of file paths to attach
   - `model` (optional): Model name (flash, pro, or custom)
+  - `timeout_seconds` (optional): Override execution timeout for this call
+  - `mode` (optional): `"inline"` (default) or `"at_command"` to delegate @path expansion
 - **Use Case**: File-specific analysis, multi-file comparisons, code reviews
-- **File Handling**: Reads files, concatenates with headers, passes to Gemini
+- **File Handling**: Inline mode streams truncated snippets with warnings; `at_command` mode passes `@` directives for Gemini CLI to resolve
 - **Example**: Code reviews, debugging specific files, analyzing project structure
 
 ## Error Handling & Troubleshooting
@@ -144,12 +152,14 @@ gemini-bridge/
 - **"Authentication required"**: Not logged into Gemini
   - Solution: `gemini auth login`
 - **"Timeout after X seconds"**: Query too complex or large files
-  - Solution: Increase timeout with GEMINI_BRIDGE_TIMEOUT environment variable
-  - Alternative: Break into smaller parts or reduce file size
+  - Solution: Increase timeout via `GEMINI_BRIDGE_TIMEOUT` or `timeout_seconds`
+  - Alternative: Switch to `mode="at_command"` or break into smaller batches
 - **"Directory does not exist"**: Invalid directory parameter
   - Solution: Use absolute paths or verify directory exists
 - **"No files provided"**: Missing files parameter for file-attachment mode
   - Solution: Provide at least one valid file path
+- **Warnings about truncation or limits**: Inline guardrails trimmed content
+  - Solution: Review the warning text, rerun with `mode="at_command"`, or adjust the `GEMINI_BRIDGE_MAX_INLINE_*` environment variables
 
 ### Debugging Steps
 1. **Verify Gemini CLI**: `gemini --version`
@@ -167,6 +177,7 @@ gemini-bridge/
 
 ### Testing Requirements
 - **Manual Testing**: Verify both MCP tools work with various queries
+- **Automated Tests**: Run `pytest` to cover helper logic and CLI interactions
 - **Integration Testing**: Test with Claude Code in development
 - **Cross-Platform**: Ensure compatibility across Python versions (3.9-3.12)
 - **CI/CD Verification**: All GitHub Actions must pass

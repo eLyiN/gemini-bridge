@@ -55,6 +55,9 @@ Before contributing, make sure you have:
    
    # Test integration with Claude Code (if available)
    ./start_server_dev.sh
+
+    # Run automated tests
+    pytest
    ```
 
 3. **Follow code style guidelines** (see below)
