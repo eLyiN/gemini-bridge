@@ -158,6 +158,11 @@ Special thanks to all contributors who made this release possible:
 - **Issues**: [https://github.com/shelakh/gemini-bridge/issues](https://github.com/shelakh/gemini-bridge/issues)
 - **MCP Protocol**: [https://modelcontextprotocol.io/](https://modelcontextprotocol.io/)
 - **Gemini CLI**: [https://www.npmjs.com/package/@google/gemini-cli](https://www.npmjs.com/package/@google/gemini-cli)
+## [1.1.1] - 2025-09-05
+
+### Fixed
+- Improved MCP tool metadata so clients display parameter types accurately.
+
 ## [1.1.0] - 2025-09-05
 
 ### Added
