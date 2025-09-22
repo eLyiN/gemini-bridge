@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 """
 Gemini MCP Server - Simple CLI Bridge
-Version 1.0.5
+Version 1.1.0
 A minimal MCP server to interface with Gemini AI via the gemini CLI.
 Created by @shelakh/elyin
 """
+
+from __future__ import annotations
 
 import logging
 import os
@@ -355,22 +357,19 @@ def execute_gemini_with_files(
 def consult_gemini(
     query: str,
     directory: str,
-    model: Optional[str] = None,
-    timeout_seconds: Optional[int] = None,
+    model: str | None = None,
+    timeout_seconds: int | None = None,
 ) -> str:
-    """
-    Send a query directly to Gemini CLI.
-    
-    This is the core function - a direct bridge between Claude and Gemini.
-    No caching, no sessions, no complexity. Just execute and return.
-    
+    """Send a query directly to the Gemini CLI.
+
     Args:
-        query: The question or prompt to send to Gemini
-        directory: Working directory (required)
-        model: Optional model name (flash, pro, etc.)
-        
+        query: Prompt text forwarded verbatim to the CLI.
+        directory: Working directory used for command execution.
+        model: Optional model alias (``flash``, ``pro``) or full Gemini model id.
+        timeout_seconds: Optional per-call timeout override in seconds.
+
     Returns:
-        Gemini's response
+        Gemini's response text or an explanatory error string.
     """
     return execute_gemini_simple(query, directory, model, timeout_seconds)
 
@@ -379,24 +378,24 @@ def consult_gemini(
 def consult_gemini_with_files(
     query: str,
     directory: str,
-    files: Optional[List[str]] = None,
-    model: Optional[str] = None,
-    timeout_seconds: Optional[int] = None,
+    files: list[str] | None = None,
+    model: str | None = None,
+    timeout_seconds: int | None = None,
     mode: str = "inline",
 ) -> str:
-    """
-    Send a query to Gemini CLI with file attachments.
-    
-    Files are read and concatenated into the prompt. Simple and direct.
-    
+    """Send a query to the Gemini CLI with file context.
+
     Args:
-        query: The question or prompt to send to Gemini
-        directory: Working directory (required)
-        files: List of file paths to attach (relative to directory)
-        model: Optional model name (flash, pro, etc.)
-        
+        query: Prompt text forwarded to the CLI.
+        directory: Working directory used for resolving relative file paths.
+        files: Relative or absolute file paths to include alongside the prompt.
+        model: Optional model alias (``flash``, ``pro``) or full Gemini model id.
+        timeout_seconds: Optional per-call timeout override in seconds.
+        mode: ``"inline"`` streams truncated snippets; ``"at_command"`` emits
+            ``@path`` directives so Gemini CLI resolves files itself.
+
     Returns:
-        Gemini's response with file context
+        Gemini's response or an explanatory error string with any warnings.
     """
     if not files:
         return "Error: files parameter is required for consult_gemini_with_files"
