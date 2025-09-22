@@ -42,6 +42,14 @@ jobs:
       run: |
         pip install dist/*.whl
 
+    - name: Install test dependencies
+      run: |
+        pip install pytest
+
+    - name: Run tests
+      run: |
+        pytest
+
     - name: Test basic import
       run: |
         python -c "import src; print('Package imported successfully')"
