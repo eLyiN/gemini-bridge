@@ -158,3 +158,14 @@ Special thanks to all contributors who made this release possible:
 - **Issues**: [https://github.com/shelakh/gemini-bridge/issues](https://github.com/shelakh/gemini-bridge/issues)
 - **MCP Protocol**: [https://modelcontextprotocol.io/](https://modelcontextprotocol.io/)
 - **Gemini CLI**: [https://www.npmjs.com/package/@google/gemini-cli](https://www.npmjs.com/package/@google/gemini-cli)
+## [1.1.0] - 2025-09-05
+
+### Added
+- **Per-call timeout overrides**: Both MCP tools now accept `timeout_seconds`, letting clients extend execution time without changing global env vars.
+- **Attachment guardrails**: Inline file uploads enforce configurable limits, surface truncation warnings, and provide environment knobs for tuning.
+- **@-command delegation**: `consult_gemini_with_files` can forward `@path` prompts directly to Gemini CLI via `mode="at_command"` for large context loads.
+- **Unit tests**: New pytest coverage across timeout handling, file preprocessing, and execution modes.
+
+### Changed
+- **Documentation**: Updated README, CLAUDE.md, and CONTRIBUTING guidelines with the new parameters, guardrails, and testing workflow.
+- **CI**: Continuous integration now installs pytest and executes the suite on every build.
