@@ -378,6 +378,7 @@ claude mcp add gemini-bridge -s user --env GEMINI_BRIDGE_TIMEOUT=120 -- uvx gemi
 **Timeout Options:**
 - **Default**: 60 seconds (if not configured)
 - **Range**: Any positive integer (seconds)
+- **Per-call override**: Supply `timeout_seconds` to either tool for one-off extensions
 - **Recommended**: 120-300 seconds for large file analysis
 - **Invalid values**: Fall back to 60 seconds with warning
 
@@ -390,6 +391,7 @@ Direct CLI bridge for simple queries.
 - `query` (string): The question or prompt to send to Gemini
 - `directory` (string): Working directory for the query (default: current directory)
 - `model` (string, optional): Model to use - "flash" or "pro" (default: "flash")
+- `timeout_seconds` (int, optional): Override the execution timeout for this request
 
 **Example:**
 ```python
@@ -408,6 +410,8 @@ CLI bridge with file attachments for detailed analysis.
 - `directory` (string): Working directory for the query
 - `files` (list): List of file paths relative to the directory
 - `model` (string, optional): Model to use - "flash" or "pro" (default: "flash")
+- `timeout_seconds` (int, optional): Override the execution timeout for this request
+- `mode` (string, optional): Either `"inline"` (default) to stream file contents or `"at_command"` to let Gemini CLI resolve `@path` references itself
 
 **Example:**
 ```python
@@ -415,9 +419,12 @@ consult_gemini_with_files(
     query="Analyze these auth files and suggest improvements",
     directory="/path/to/project",
     files=["src/auth.py", "src/models.py"],
-    model="pro"
+    model="pro",
+    timeout_seconds=180
 )
 ```
+
+**Tip:** When scanning large trees, switch to `mode="at_command"` so the Gemini CLI handles file globbing and truncation natively.
 
 ## 📋 Usage Examples
 
@@ -447,16 +454,23 @@ consult_gemini_with_files(
 consult_gemini_with_files(
     query="Compare these database implementations and recommend the best approach",
     directory="/Users/dev/my-project",
-    files=["src/db/postgres.py", "src/db/sqlite.py", "src/db/redis.py"]
+    files=["src/db/postgres.py", "src/db/sqlite.py", "src/db/redis.py"],
+    mode="at_command"
 )
 ```
+
+### Large File Safeguards
+- Inline transfers cap at ~256 KB per file and ~512 KB per request to avoid hangs.
+- Oversized files are truncated to head/tail snippets with a warning in the MCP response.
+- Tune the caps with environment variables (`GEMINI_BRIDGE_MAX_INLINE_TOTAL_BYTES`, etc.) or prefer `mode="at_command"` for bigger payloads.
 
 ## 🏗️ Architecture
 
 ### Core Design
 - **CLI-First**: Direct subprocess calls to `gemini` command
 - **Stateless**: Each tool call is independent with no session state
-- **Fixed Timeout**: 60-second maximum execution time
+- **Adaptive Timeout**: Defaults to 60 seconds but overridable per request or via env var
+- **Attachment Guardrails**: Inline mode enforces lightweight limits; `@` mode delegates to Gemini CLI tooling
 - **Simple Error Handling**: Clear error messages with fail-fast approach
 
 ### Project Structure
