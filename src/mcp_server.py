@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Gemini MCP Server - Simple CLI Bridge
-Version 1.1.1
+Version 1.2.0
 A minimal MCP server to interface with Gemini AI via the gemini CLI.
 Created by @shelakh/elyin
 """
@@ -32,20 +32,36 @@ def _normalize_model_name(model: Optional[str]) -> str:
     Defaults to gemini-2.5-flash when not provided or unrecognized.
 
     Accepted forms:
-    - "flash", "2.5-flash", "gemini-2.5-flash"
-    - "pro", "2.5-pro", "gemini-2.5-pro"
+    - "flash", "2.5-flash", "gemini-2.5-flash" -> gemini-2.5-flash
+    - "pro", "2.5-pro", "gemini-2.5-pro" -> gemini-2.5-pro
+    - "3-pro", "gemini-3-pro", "gemini-3-pro-preview" -> gemini-3-pro-preview
+    - "3-flash", "gemini-3-flash", "gemini-3-flash-preview" -> gemini-3-flash-preview
+    - "auto" -> auto (model router, lets CLI choose optimal model)
     """
     if not model:
         return "gemini-2.5-flash"
     value = model.strip().lower()
-    # Common short aliases
+
+    # Gemini 2.5 aliases
     if value in {"flash", "2.5-flash", "gemini-2.5-flash"}:
         return "gemini-2.5-flash"
     if value in {"pro", "2.5-pro", "gemini-2.5-pro"}:
         return "gemini-2.5-pro"
-    # If the caller passed a full model name, keep it
+
+    # Gemini 3 aliases (preview models)
+    if value in {"3-pro", "gemini-3-pro", "gemini-3-pro-preview"}:
+        return "gemini-3-pro-preview"
+    if value in {"3-flash", "gemini-3-flash", "gemini-3-flash-preview"}:
+        return "gemini-3-flash-preview"
+
+    # Model router (let CLI choose best model)
+    if value == "auto":
+        return "auto"
+
+    # Pass through any other gemini-* model name
     if value.startswith("gemini-"):
         return value
+
     # Fallback to flash for anything else
     return "gemini-2.5-flash"
 
