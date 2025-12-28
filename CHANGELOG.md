@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2025-12-28
+
+### Added
+- **Gemini 3 model shortcuts**: New aliases `3-pro` and `3-flash` for the latest Gemini 3 preview models (`gemini-3-pro-preview`, `gemini-3-flash-preview`).
+- **Model router support**: Use `auto` to let Gemini CLI's model router choose the optimal model for each task.
+
+### Changed
+- Updated `_normalize_model_name()` documentation to reflect all supported model aliases.
+
 ## [1.0.5] - 2025-08-26
 
 ### Added
