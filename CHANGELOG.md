@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-03-03
+
+### Added
+- **Web search tool**: New `web_search` MCP tool that leverages Gemini CLI's built-in web search capabilities for querying current information
+- **Gemini 2.5 Flash Lite**: New alias `flash-lite` for the cost-effective `gemini-2.5-flash-lite` model
+- **Gemini 3.1 Pro Preview**: New alias `3.1-pro` for the latest `gemini-3.1-pro-preview` model
+- **Extended model aliases**: Full list now includes flash, pro, flash-lite, 3-pro, 3-flash, 3.1-pro, and auto router
+
+### Changed
+- **Modern Python syntax**: Migrated to Python 3.9+ type hints (`str | None`, `list[str]`) throughout codebase
+- **Path handling**: Replaced `os.path` with `pathlib.Path` for better cross-platform compatibility
+- **Documentation updates**: README.md and CLAUDE.md updated with new tools and model options
+
+### Technical Details
+- Removed old typing imports (`Optional`, `List`, `Tuple`)
+- Added `from pathlib import Path` for all path operations
+- Updated `_normalize_model_name()` function with new model aliases
+- All 27 tests pass including 5 new tests for models and web_search
+
 ## [1.2.0] - 2025-12-28
 
 ### Added

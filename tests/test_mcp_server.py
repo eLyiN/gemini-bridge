@@ -25,6 +25,25 @@ def test_normalize_model_name_pro_alias():
     assert mcp_server._normalize_model_name("2.5-pro") == "gemini-2.5-pro"
 
 
+def test_normalize_model_name_flash_lite():
+    assert mcp_server._normalize_model_name("flash-lite") == "gemini-2.5-flash-lite"
+    assert mcp_server._normalize_model_name("2.5-flash-lite") == "gemini-2.5-flash-lite"
+
+
+def test_normalize_model_name_3_series():
+    assert mcp_server._normalize_model_name("3-pro") == "gemini-3-pro-preview"
+    assert mcp_server._normalize_model_name("3-flash") == "gemini-3-flash-preview"
+
+
+def test_normalize_model_name_3_1_series():
+    assert mcp_server._normalize_model_name("3.1-pro") == "gemini-3.1-pro-preview"
+    assert mcp_server._normalize_model_name("gemini-3.1-pro") == "gemini-3.1-pro-preview"
+
+
+def test_normalize_model_name_auto_router():
+    assert mcp_server._normalize_model_name("auto") == "auto"
+
+
 def test_normalize_model_name_passthrough():
     assert mcp_server._normalize_model_name("gemini-exp-1201") == "gemini-exp-1201"
 
@@ -239,3 +258,29 @@ def test_execute_gemini_with_files_at_command_warns_on_missing(tmp_path, monkeyp
 def test_consult_gemini_with_files_requires_list(tmp_path):
     result = mcp_server.consult_gemini_with_files("Hello", str(tmp_path), files=None)
     assert "files parameter is required" in result
+
+
+def test_web_search_prepends_search_instruction(tmp_path, monkeypatch):
+    monkeypatch.setattr("src.mcp_server.shutil.which", lambda _: "gemini")
+
+    def fake_run(cmd, **kwargs):
+        assert "Please use web search to find current information about" in kwargs["input"]
+        assert "Python version" in kwargs["input"]
+        return SimpleNamespace(returncode=0, stdout="Search results", stderr="")
+
+    monkeypatch.setattr("src.mcp_server.subprocess.run", fake_run)
+    result = mcp_server.web_search("Python version", str(tmp_path))
+    assert "Search results" in result
+
+
+def test_web_search_passes_model_and_timeout(tmp_path, monkeypatch):
+    monkeypatch.setattr("src.mcp_server.shutil.which", lambda _: "gemini")
+
+    def fake_run(cmd, cwd, capture_output, text, timeout, input):
+        assert cmd == ["gemini", "-m", "gemini-2.5-pro"]
+        assert timeout == 30
+        return SimpleNamespace(returncode=0, stdout="ok", stderr="")
+
+    monkeypatch.setattr("src.mcp_server.subprocess.run", fake_run)
+    result = mcp_server.web_search("test", str(tmp_path), model="pro", timeout_seconds=30)
+    assert result == "ok"

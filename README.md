@@ -12,12 +12,13 @@ A lightweight MCP (Model Context Protocol) server that enables AI coding assista
 ## ✨ Features
 
 - **Direct Gemini CLI Integration**: Zero API costs using official Gemini CLI
-- **Simple MCP Tools**: Two core functions for basic queries and file analysis
+- **Three MCP Tools**: Basic queries, file analysis, and web search capabilities
 - **Stateless Operation**: No sessions, caching, or complex state management
 - **Production Ready**: Robust error handling with configurable 60-second timeouts
 - **Minimal Dependencies**: Only requires `mcp>=1.0.0` and Gemini CLI
 - **Easy Deployment**: Support for both uvx and traditional pip installation
 - **Universal MCP Compatibility**: Works with any MCP-compatible AI coding assistant
+- **Modern Python**: Uses pathlib and modern type hints (Python 3.10+)
 
 ## 🚀 Quick Start
 
@@ -390,7 +391,7 @@ Direct CLI bridge for simple queries.
 **Parameters:**
 - `query` (string): The question or prompt to send to Gemini
 - `directory` (string): Working directory for the query (default: current directory)
-- `model` (string, optional): Model to use - "flash" or "pro" (default: "flash")
+- `model` (string, optional): Model to use - "flash", "pro", "flash-lite", "3-pro", "3-flash", "3.1-pro", or "auto" (default: "flash")
 - `timeout_seconds` (int, optional): Override the execution timeout for this request
 
 **Example:**
@@ -409,7 +410,7 @@ CLI bridge with file attachments for detailed analysis.
 - `query` (string): The question or prompt to send to Gemini
 - `directory` (string): Working directory for the query
 - `files` (list): List of file paths relative to the directory
-- `model` (string, optional): Model to use - "flash" or "pro" (default: "flash")
+- `model` (string, optional): Model to use - "flash", "pro", "flash-lite", "3-pro", "3-flash", "3.1-pro", or "auto" (default: "flash")
 - `timeout_seconds` (int, optional): Override the execution timeout for this request
 - `mode` (string, optional): Either `"inline"` (default) to stream file contents or `"at_command"` to let Gemini CLI resolve `@path` references itself
 
@@ -425,6 +426,23 @@ consult_gemini_with_files(
 ```
 
 **Tip:** When scanning large trees, switch to `mode="at_command"` so the Gemini CLI handles file globbing and truncation natively.
+
+### `web_search`
+Search the web for current information using Gemini CLI's built-in web search capabilities.
+
+**Parameters:**
+- `query` (string): Search query or question to look up on the web
+- `directory` (string, optional): Working directory for command execution (default: current directory)
+- `model` (string, optional): Model to use - "flash", "pro", "flash-lite", "3-pro", "3-flash", "3.1-pro", or "auto" (default: "flash")
+- `timeout_seconds` (int, optional): Override the execution timeout for this request
+
+**Example:**
+```python
+web_search(
+    query="latest Python version and new features",
+    model="flash"
+)
+```
 
 ## 📋 Usage Examples
 
@@ -456,6 +474,15 @@ consult_gemini_with_files(
     directory="/Users/dev/my-project",
     files=["src/db/postgres.py", "src/db/sqlite.py", "src/db/redis.py"],
     mode="at_command"
+)
+```
+
+### Web Search
+```python
+# Get current information from the web
+web_search(
+    query="latest Python version and new features in 3.13",
+    model="flash"
 )
 ```
 

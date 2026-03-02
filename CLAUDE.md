@@ -100,7 +100,14 @@ python -c "import src; print('Package works!')"
 
 **Model Support:**
 - Default: `gemini-2.5-flash` (optimal performance/cost)
-- Available: `flash`, `pro` (auto-normalized to full names)
+- Available aliases:
+  - `flash`, `2.5-flash` → `gemini-2.5-flash`
+  - `pro`, `2.5-pro` → `gemini-2.5-pro`
+  - `flash-lite`, `2.5-flash-lite` → `gemini-2.5-flash-lite`
+  - `3-pro` → `gemini-3-pro-preview`
+  - `3-flash` → `gemini-3-flash-preview`
+  - `3.1-pro` → `gemini-3.1-pro-preview`
+  - `auto` → lets CLI choose optimal model
 - Custom models accepted if prefixed with `gemini-`
 
 ### File Structure
@@ -131,11 +138,11 @@ gemini-bridge/
 - **Use Case**: General questions, code analysis without file attachments
 - **Example**: General programming questions, code explanations
 
-### `consult_gemini_with_files` 
+### `consult_gemini_with_files`
 - **Purpose**: CLI bridge with file attachments for detailed analysis
-- **Parameters**: 
+- **Parameters**:
   - `query` (required): The question or prompt to send to Gemini
-  - `directory` (required): Working directory for the query  
+  - `directory` (required): Working directory for the query
   - `files` (required list): List of file paths to attach
   - `model` (optional): Model name (flash, pro, or custom)
   - `timeout_seconds` (optional): Override execution timeout for this call
@@ -143,6 +150,16 @@ gemini-bridge/
 - **Use Case**: File-specific analysis, multi-file comparisons, code reviews
 - **File Handling**: Inline mode streams truncated snippets with warnings; `at_command` mode passes `@` directives for Gemini CLI to resolve
 - **Example**: Code reviews, debugging specific files, analyzing project structure
+
+### `web_search`
+- **Purpose**: Search the web for current information using Gemini CLI's built-in web search
+- **Parameters**:
+  - `query` (required): Search query or question to look up on the web
+  - `directory` (optional): Working directory for command execution (default: ".")
+  - `model` (optional): Model name (flash, pro, or custom)
+  - `timeout_seconds` (optional): Override execution timeout for this call
+- **Use Case**: Getting current information, latest news, recent documentation
+- **Example**: "latest Python version", "current React best practices"
 
 ## Error Handling & Troubleshooting
 

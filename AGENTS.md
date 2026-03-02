@@ -14,10 +14,22 @@ Run commands from the project root to ensure relative paths resolve correctly.
 Follow PEP 8 with 4-space indentation and an 88-character target line length. Use descriptive, lowercase `snake_case` for functions and variables, `UPPER_SNAKE_CASE` for constants, and reserve `CamelCase` for classes. Keep functions small, add docstrings describing intent, and include type hints on public interfaces. Prefer expressive log messages over inline comments; only annotate logic that is non-obvious.
 
 ## Testing Guidelines
-No automated suite ships today, so validate changes by exercising both tools: `python -m src` for the stdio server and `uvx gemini-bridge -- --help` or a sample prompt to confirm CLI wiring. When introducing automated tests, place them under `tests/`, target `pytest`, and mirror module names (e.g., `tests/test_mcp_server.py`). Cover environment-sensitive paths such as `_normalize_model_name` and `_get_timeout`, and document manual test steps in your PR.
+Validate changes by exercising all three MCP tools: `consult_gemini`, `consult_gemini_with_files`, and `web_search`. Run `python -m src` for the stdio server and `uvx gemini-bridge -- --help` or a sample prompt to confirm CLI wiring. Automated tests are located under `tests/`, targeting `pytest`, and mirror module names (e.g., `tests/test_mcp_server.py`). Cover environment-sensitive paths such as `_normalize_model_name`, `_get_timeout`, and the new `web_search` function. Document manual test steps in your PR.
 
 ## Commit & Pull Request Guidelines
 Commit messages follow Conventional Commit prefixes (`feat:`, `fix:`, `chore:`, `docs:`) and should explain the motivation. Keep commits atomic and focused on one concern. Pull requests must include a concise summary, linked issues, and a brief testing log (commands run, expected vs. actual behavior). Request a review once CI (when available) passes and respond to feedback with follow-up commits rather than force-pushes.
 
 ## Security & Configuration Tips
 Authenticate the Gemini CLI (`gemini auth login`) before running tools and avoid hard-coding credentials. Use the `GEMINI_BRIDGE_TIMEOUT` environment variable for tuning, but never commit `.env` files or shell history containing secrets. Validate file paths carefully when adding features that read from disk to preserve the server’s minimal, secure surface area.
+
+## Model Support
+The server supports multiple Gemini models through aliases:
+- `flash`, `2.5-flash` → `gemini-2.5-flash` (default)
+- `pro`, `2.5-pro` → `gemini-2.5-pro`
+- `flash-lite`, `2.5-flash-lite` → `gemini-2.5-flash-lite`
+- `3-pro` → `gemini-3-pro-preview`
+- `3-flash` → `gemini-3-flash-preview`
+- `3.1-pro` → `gemini-3.1-pro-preview`
+- `auto` → lets CLI choose optimal model
+
+Custom models prefixed with `gemini-` are passed through directly.

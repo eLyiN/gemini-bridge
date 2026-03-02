@@ -73,26 +73,25 @@ Before contributing, make sure you have:
 
 ### Example code style:
 ```python
-from typing import Optional, List
+from pathlib import Path
 import subprocess
-import json
 
 def consult_gemini(
-    query: str, 
-    directory: str = ".", 
-    model: Optional[str] = None
+    query: str,
+    directory: str = ".",
+    model: str | None = None
 ) -> str:
     """
     Send a query to Gemini CLI.
-    
+
     Args:
         query: The question or prompt to send
         directory: Working directory for the query
-        model: Optional model name (flash, pro)
-        
+        model: Optional model name (flash, pro, flash-lite, 3-pro, etc.)
+
     Returns:
         Gemini's response as a string
-        
+
     Raises:
         RuntimeError: If CLI is not available or query fails
     """
@@ -209,6 +208,7 @@ Before submitting, verify:
 - [ ] MCP server starts without errors
 - [ ] `consult_gemini` tool works with basic queries
 - [ ] `consult_gemini_with_files` tool works with file attachments
+- [ ] `web_search` tool works for web queries
 - [ ] Error handling works properly (try invalid queries)
 - [ ] Both `start_server_dev.sh` and `start_server_uvx.sh` work
 - [ ] Documentation is updated and accurate
@@ -217,8 +217,8 @@ Before submitting, verify:
 
 If possible, test with:
 - Claude Code integration
-- Different Python versions (3.9, 3.10, 3.11, 3.12)
-- Various Gemini models (flash, pro)
+- Different Python versions (3.10, 3.11, 3.12)
+- Various Gemini models (flash, pro, flash-lite, 3-pro, 3-flash, 3.1-pro, auto)
 
 ## 🆘 Getting Help
 
