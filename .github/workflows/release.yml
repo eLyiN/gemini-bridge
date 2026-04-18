@@ -14,10 +14,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
 
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: '3.11'
 
@@ -38,9 +38,8 @@ jobs:
       id: tag
       run: echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
-    - name: Create GitHub Release
-      id: create_release
-      uses: actions/create-release@v1
+    - name: Create GitHub Release and upload wheel
+      uses: softprops/action-gh-release@v2
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
@@ -65,20 +64,7 @@ jobs:
           See [README.md](README.md) for full documentation.
         draft: false
         prerelease: false
-
-    - name: Find wheel file
-      id: find_wheel
-      run: echo "wheel_path=$(find dist -name '*.whl' -type f)" >> $GITHUB_OUTPUT
-
-    - name: Upload wheel to release
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ${{ steps.find_wheel.outputs.wheel_path }}
-        asset_name: gemini_bridge-${{ steps.tag.outputs.tag }}-py3-none-any.whl
-        asset_content_type: application/octet-stream
+        files: dist/*.whl
 
     - name: Publish to PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
