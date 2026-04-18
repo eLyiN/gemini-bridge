@@ -34,10 +34,11 @@ def _normalize_model_name(model: str | None) -> str:
     Accepted forms:
     - "flash", "2.5-flash", "gemini-2.5-flash" -> gemini-2.5-flash
     - "pro", "2.5-pro", "gemini-2.5-pro" -> gemini-2.5-pro
-    - "flash-lite", "2.5-flash-lite", "gemini-2.5-flash-lite" -> gemini-2.5-flash-lite
+    - "flash-lite", "2.5-flash-lite", "2.5-lite", "gemini-2.5-flash-lite", "gemini-2.5-lite" -> gemini-2.5-flash-lite
     - "3-pro", "gemini-3-pro", "gemini-3-pro-preview" -> gemini-3-pro-preview
     - "3-flash", "gemini-3-flash", "gemini-3-flash-preview" -> gemini-3-flash-preview
     - "3.1-pro", "gemini-3.1-pro", "gemini-3.1-pro-preview" -> gemini-3.1-pro-preview
+    - "3.1-flash-lite", "gemini-3.1-flash-lite", "gemini-3.1-flash-lite-preview" -> gemini-3.1-flash-lite-preview
     - "auto" -> auto (model router, lets CLI choose optimal model)
     """
     if not model:
@@ -51,7 +52,7 @@ def _normalize_model_name(model: str | None) -> str:
         return "gemini-2.5-pro"
 
     # Gemini 2.5 Lite
-    if value in {"flash-lite", "2.5-flash-lite", "gemini-2.5-flash-lite"}:
+    if value in {"flash-lite", "2.5-flash-lite", "2.5-lite", "gemini-2.5-flash-lite", "gemini-2.5-lite"}:
         return "gemini-2.5-flash-lite"
 
     # Gemini 3 aliases (preview models)
@@ -60,9 +61,11 @@ def _normalize_model_name(model: str | None) -> str:
     if value in {"3-flash", "gemini-3-flash", "gemini-3-flash-preview"}:
         return "gemini-3-flash-preview"
 
-    # Gemini 3.1 Pro Preview
+    # Gemini 3.1 series
     if value in {"3.1-pro", "gemini-3.1-pro", "gemini-3.1-pro-preview"}:
         return "gemini-3.1-pro-preview"
+    if value in {"3.1-flash-lite", "gemini-3.1-flash-lite", "gemini-3.1-flash-lite-preview"}:
+        return "gemini-3.1-flash-lite-preview"
 
     # Model router (let CLI choose best model)
     if value == "auto":
@@ -298,10 +301,19 @@ def execute_gemini_simple(
         if result.returncode == 0:
             return result.stdout.strip() if result.stdout.strip() else "No output from Gemini CLI"
         else:
-            return f"Gemini CLI Error: {result.stderr.strip()}"
-            
+            error_msg = result.stderr.strip()
+            # Provide helpful suggestions for common errors
+            if "not available" in error_msg.lower() or "unauthorized" in error_msg.lower():
+                return f"Gemini CLI Error: Model '{selected_model}' may not be available for your account. Try: 'flash', 'flash-lite', or 'auto'. Details: {error_msg}"
+            elif "authentication" in error_msg.lower() or "auth" in error_msg.lower():
+                return f"Gemini CLI Error: Authentication required. Run: gemini auth login. Details: {error_msg}"
+            else:
+                return f"Gemini CLI Error: {error_msg}"
+
     except subprocess.TimeoutExpired:
-        return f"Error: Gemini CLI command timed out after {timeout} seconds"
+        return f"Error: Gemini CLI command timed out after {timeout} seconds. Try increasing timeout or simplifying your query."
+    except FileNotFoundError:
+        return "Error: Gemini CLI not found. Install with: npm install -g @google/gemini-cli"
     except Exception as e:
         return f"Error executing Gemini CLI: {str(e)}"
 
@@ -372,7 +384,14 @@ def execute_gemini_with_files(
         if result.returncode == 0:
             output = result.stdout.strip() if result.stdout.strip() else "No output from Gemini CLI"
         else:
-            output = f"Gemini CLI Error: {result.stderr.strip()}"
+            error_msg = result.stderr.strip()
+            # Provide helpful suggestions for common errors
+            if "not available" in error_msg.lower() or "unauthorized" in error_msg.lower():
+                output = f"Gemini CLI Error: Model '{selected_model}' may not be available for your account. Try: 'flash', 'flash-lite', or 'auto'. Details: {error_msg}"
+            elif "authentication" in error_msg.lower() or "auth" in error_msg.lower():
+                output = f"Gemini CLI Error: Authentication required. Run: gemini auth login. Details: {error_msg}"
+            else:
+                output = f"Gemini CLI Error: {error_msg}"
 
         if warnings:
             warning_block = "Warnings:\n" + "\n".join(f"- {w}" for w in warnings)
@@ -380,7 +399,9 @@ def execute_gemini_with_files(
         return output
 
     except subprocess.TimeoutExpired:
-        return f"Error: Gemini CLI command timed out after {timeout} seconds"
+        return f"Error: Gemini CLI command timed out after {timeout} seconds. Try increasing timeout or simplifying your query."
+    except FileNotFoundError:
+        return "Error: Gemini CLI not found. Install with: npm install -g @google/gemini-cli"
     except Exception as e:
         return f"Error executing Gemini CLI: {str(e)}"
 
@@ -441,7 +462,11 @@ def web_search(
     model: str | None = None,
     timeout_seconds: int | None = None,
 ) -> str:
-    """Search the web for current information using Gemini CLI's built-in search.
+    """Ask Gemini queries with web search context.
+
+    Note: This uses Gemini CLI's automatic web search capability.
+    The model determines when to search based on query context.
+    Best-effort web search - not guaranteed for every query.
 
     Args:
         query: Search query or question to look up on the web
@@ -450,7 +475,7 @@ def web_search(
         timeout_seconds: Optional per-call timeout override in seconds
 
     Returns:
-        Gemini's search response with web sources
+        Gemini's response with potential web sources
     """
     search_prompt = f"Please use web search to find current information about: {query}"
     return execute_gemini_simple(search_prompt, directory, model, timeout_seconds)

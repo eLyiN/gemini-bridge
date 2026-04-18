@@ -390,8 +390,8 @@ Direct CLI bridge for simple queries.
 
 **Parameters:**
 - `query` (string): The question or prompt to send to Gemini
-- `directory` (string): Working directory for the query (default: current directory)
-- `model` (string, optional): Model to use - "flash", "pro", "flash-lite", "3-pro", "3-flash", "3.1-pro", or "auto" (default: "flash")
+- `directory` (string): Working directory for the query
+- `model` (string, optional): Model to use - "flash", "pro", "flash-lite", "2.5-lite", "3-pro", "3-flash", "3.1-pro", "3.1-flash-lite", or "auto" (default: "flash")
 - `timeout_seconds` (int, optional): Override the execution timeout for this request
 
 **Example:**
@@ -410,7 +410,7 @@ CLI bridge with file attachments for detailed analysis.
 - `query` (string): The question or prompt to send to Gemini
 - `directory` (string): Working directory for the query
 - `files` (list): List of file paths relative to the directory
-- `model` (string, optional): Model to use - "flash", "pro", "flash-lite", "3-pro", "3-flash", "3.1-pro", or "auto" (default: "flash")
+- `model` (string, optional): Model to use - "flash", "pro", "flash-lite", "2.5-lite", "3-pro", "3-flash", "3.1-pro", "3.1-flash-lite", or "auto" (default: "flash")
 - `timeout_seconds` (int, optional): Override the execution timeout for this request
 - `mode` (string, optional): Either `"inline"` (default) to stream file contents or `"at_command"` to let Gemini CLI resolve `@path` references itself
 
@@ -428,12 +428,12 @@ consult_gemini_with_files(
 **Tip:** When scanning large trees, switch to `mode="at_command"` so the Gemini CLI handles file globbing and truncation natively.
 
 ### `web_search`
-Search the web for current information using Gemini CLI's built-in web search capabilities.
+Ask Gemini queries with web search context. Uses Gemini CLI's automatic web search when the model determines it's needed. Best-effort functionality - not guaranteed for every query.
 
 **Parameters:**
 - `query` (string): Search query or question to look up on the web
-- `directory` (string, optional): Working directory for command execution (default: current directory)
-- `model` (string, optional): Model to use - "flash", "pro", "flash-lite", "3-pro", "3-flash", "3.1-pro", or "auto" (default: "flash")
+- `directory` (string): Working directory for command execution
+- `model` (string, optional): Model to use - "flash", "pro", "flash-lite", "2.5-lite", "3-pro", "3-flash", "3.1-pro", "3.1-flash-lite", or "auto" (default: "flash")
 - `timeout_seconds` (int, optional): Override the execution timeout for this request
 
 **Example:**

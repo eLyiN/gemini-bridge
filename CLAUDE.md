@@ -152,10 +152,10 @@ gemini-bridge/
 - **Example**: Code reviews, debugging specific files, analyzing project structure
 
 ### `web_search`
-- **Purpose**: Search the web for current information using Gemini CLI's built-in web search
+- **Purpose**: Ask Gemini queries with web search context. Uses Gemini CLI's automatic web search when the model determines it's needed. Best-effort functionality - not guaranteed for every query.
 - **Parameters**:
   - `query` (required): Search query or question to look up on the web
-  - `directory` (optional): Working directory for command execution (default: ".")
+  - `directory` (required): Working directory for command execution
   - `model` (optional): Model name (flash, pro, or custom)
   - `timeout_seconds` (optional): Override execution timeout for this call
 - **Use Case**: Getting current information, latest news, recent documentation

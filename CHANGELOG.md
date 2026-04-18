@@ -11,18 +11,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Web search tool**: New `web_search` MCP tool that leverages Gemini CLI's built-in web search capabilities for querying current information
 - **Gemini 2.5 Flash Lite**: New alias `flash-lite` for the cost-effective `gemini-2.5-flash-lite` model
 - **Gemini 3.1 Pro Preview**: New alias `3.1-pro` for the latest `gemini-3.1-pro-preview` model
-- **Extended model aliases**: Full list now includes flash, pro, flash-lite, 3-pro, 3-flash, 3.1-pro, and auto router
+- **Gemini 3.1 Flash Lite**: New alias `3.1-flash-lite` for the latest `gemini-3.1-flash-lite-preview` model
+- **Extended model aliases**: Full list now includes flash, pro, flash-lite, 2.5-lite, 3-pro, 3-flash, 3.1-pro, 3.1-flash-lite, and auto router
 
 ### Changed
-- **Modern Python syntax**: Migrated to Python 3.9+ type hints (`str | None`, `list[str]`) throughout codebase
+- **Modern Python syntax**: Migrated to Python 3.10+ type hints (`str | None`, `list[str]`) throughout codebase
 - **Path handling**: Replaced `os.path` with `pathlib.Path` for better cross-platform compatibility
 - **Documentation updates**: README.md and CLAUDE.md updated with new tools and model options
+
+### Fixed
+- **Model alias fixes**: Fixed `2.5-lite` to correctly map to `gemini-2.5-flash-lite`
+- **Error messaging**: Improved error messages with helpful suggestions for model availability, authentication, timeout, and missing CLI
+- **Documentation accuracy**: Fixed Python version requirement (3.10+ instead of 3.9+ throughout docs)
+- **Web search honesty**: Updated web_search description to reflect best-effort automatic nature
 
 ### Technical Details
 - Removed old typing imports (`Optional`, `List`, `Tuple`)
 - Added `from pathlib import Path` for all path operations
-- Updated `_normalize_model_name()` function with new model aliases
-- All 27 tests pass including 5 new tests for models and web_search
+- Updated `_normalize_model_name()` function with new model aliases (3.1-flash-lite, 2.5-lite)
+- Enhanced error handling with actionable user guidance
+- All 34 tests pass including 7 new tests for models, web_search, and error handling
 
 ## [1.2.0] - 2025-12-28
 
@@ -94,7 +102,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### Dependencies
 - **Required**: `mcp>=1.0.0`
 - **External**: Gemini CLI (npm package `@google/gemini-cli`)
-- **Python**: Compatible with Python 3.9+
+- **Python**: Compatible with Python 3.10+
 
 #### File Structure
 ```

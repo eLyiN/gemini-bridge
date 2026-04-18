@@ -26,10 +26,11 @@ Authenticate the Gemini CLI (`gemini auth login`) before running tools and avoid
 The server supports multiple Gemini models through aliases:
 - `flash`, `2.5-flash` → `gemini-2.5-flash` (default)
 - `pro`, `2.5-pro` → `gemini-2.5-pro`
-- `flash-lite`, `2.5-flash-lite` → `gemini-2.5-flash-lite`
+- `flash-lite`, `2.5-flash-lite`, `2.5-lite` → `gemini-2.5-flash-lite`
 - `3-pro` → `gemini-3-pro-preview`
 - `3-flash` → `gemini-3-flash-preview`
 - `3.1-pro` → `gemini-3.1-pro-preview`
+- `3.1-flash-lite` → `gemini-3.1-flash-lite-preview`
 - `auto` → lets CLI choose optimal model
 
 Custom models prefixed with `gemini-` are passed through directly.

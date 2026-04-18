@@ -73,7 +73,6 @@ Before contributing, make sure you have:
 
 ### Example code style:
 ```python
-from pathlib import Path
 import subprocess
 
 def consult_gemini(
