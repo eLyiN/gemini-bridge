@@ -166,7 +166,7 @@ We follow responsible disclosure practices:
 
 ### System Dependencies
 
-- **Python**: Use supported Python versions (3.9+)
+- **Python**: Use supported Python versions (3.10+)
 - **Operating System**: Keep OS updated for subprocess security
 - **Network**: Secure network configuration recommended
 

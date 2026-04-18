@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Gemini MCP Server - Simple CLI Bridge
-Version 1.2.0
+Version 1.3.0
 A minimal MCP server to interface with Gemini AI via the gemini CLI.
 Created by @shelakh/elyin
 """
@@ -12,7 +12,7 @@ import logging
 import os
 import shutil
 import subprocess
-from typing import List, Optional, Tuple
+from pathlib import Path
 
 from mcp.server.fastmcp import FastMCP
 
@@ -26,7 +26,7 @@ INLINE_CHUNK_HEAD_BYTES = int(os.getenv("GEMINI_BRIDGE_INLINE_HEAD_BYTES", str(6
 INLINE_CHUNK_TAIL_BYTES = int(os.getenv("GEMINI_BRIDGE_INLINE_TAIL_BYTES", str(32 * 1024)))
 
 
-def _normalize_model_name(model: Optional[str]) -> str:
+def _normalize_model_name(model: str | None) -> str:
     """
     Normalize user-provided model identifiers to canonical Gemini CLI model names.
     Defaults to gemini-2.5-flash when not provided or unrecognized.
@@ -34,8 +34,11 @@ def _normalize_model_name(model: Optional[str]) -> str:
     Accepted forms:
     - "flash", "2.5-flash", "gemini-2.5-flash" -> gemini-2.5-flash
     - "pro", "2.5-pro", "gemini-2.5-pro" -> gemini-2.5-pro
+    - "flash-lite", "2.5-flash-lite", "2.5-lite", "gemini-2.5-flash-lite", "gemini-2.5-lite" -> gemini-2.5-flash-lite
     - "3-pro", "gemini-3-pro", "gemini-3-pro-preview" -> gemini-3-pro-preview
     - "3-flash", "gemini-3-flash", "gemini-3-flash-preview" -> gemini-3-flash-preview
+    - "3.1-pro", "gemini-3.1-pro", "gemini-3.1-pro-preview" -> gemini-3.1-pro-preview
+    - "3.1-flash-lite", "gemini-3.1-flash-lite", "gemini-3.1-flash-lite-preview" -> gemini-3.1-flash-lite-preview
     - "auto" -> auto (model router, lets CLI choose optimal model)
     """
     if not model:
@@ -48,11 +51,21 @@ def _normalize_model_name(model: Optional[str]) -> str:
     if value in {"pro", "2.5-pro", "gemini-2.5-pro"}:
         return "gemini-2.5-pro"
 
+    # Gemini 2.5 Lite
+    if value in {"flash-lite", "2.5-flash-lite", "2.5-lite", "gemini-2.5-flash-lite", "gemini-2.5-lite"}:
+        return "gemini-2.5-flash-lite"
+
     # Gemini 3 aliases (preview models)
     if value in {"3-pro", "gemini-3-pro", "gemini-3-pro-preview"}:
         return "gemini-3-pro-preview"
     if value in {"3-flash", "gemini-3-flash", "gemini-3-flash-preview"}:
         return "gemini-3-flash-preview"
+
+    # Gemini 3.1 series
+    if value in {"3.1-pro", "gemini-3.1-pro", "gemini-3.1-pro-preview"}:
+        return "gemini-3.1-pro-preview"
+    if value in {"3.1-flash-lite", "gemini-3.1-flash-lite", "gemini-3.1-flash-lite-preview"}:
+        return "gemini-3.1-flash-lite-preview"
 
     # Model router (let CLI choose best model)
     if value == "auto":
@@ -89,7 +102,7 @@ def _get_timeout() -> int:
         return 60
 
 
-def _coerce_timeout(timeout_seconds: Optional[int]) -> int:
+def _coerce_timeout(timeout_seconds: int | None) -> int:
     """Return a positive timeout, preferring explicit overrides."""
     if timeout_seconds is None:
         return _get_timeout()
@@ -113,9 +126,14 @@ def _coerce_timeout(timeout_seconds: Optional[int]) -> int:
     return timeout
 
 
-def _resolve_path(directory: str, candidate: str) -> Tuple[str, Optional[str]]:
+def _resolve_path(directory: str, candidate: str) -> tuple[str, str | None]:
     """Return absolute path and relative display path rooted at directory."""
-    abs_path = candidate if os.path.isabs(candidate) else os.path.join(directory, candidate)
+    candidate_path = Path(candidate)
+    abs_path = (
+        str(candidate_path)
+        if candidate_path.is_absolute()
+        else str(Path(directory) / candidate)
+    )
     try:
         rel_path = os.path.relpath(abs_path, directory)
     except ValueError:
@@ -125,16 +143,17 @@ def _resolve_path(directory: str, candidate: str) -> Tuple[str, Optional[str]]:
     return abs_path, rel_path
 
 
-def _read_file_for_inline(abs_path: str) -> Tuple[str, bool, int]:
+def _read_file_for_inline(abs_path: str) -> tuple[str, bool, int]:
     """Read file with truncation safeguards.
 
     Returns tuple of (content, truncated flag, bytes_used).
     """
-    size = os.path.getsize(abs_path)
+    abs_path_obj = Path(abs_path)
+    size = abs_path_obj.stat().st_size
     truncated = False
 
     if size <= MAX_INLINE_FILE_BYTES:
-        with open(abs_path, "r", encoding="utf-8", errors="ignore") as handle:
+        with abs_path_obj.open(encoding="utf-8", errors="ignore") as handle:
             content = handle.read()
         return content, truncated, min(size, MAX_INLINE_FILE_BYTES)
 
@@ -142,7 +161,7 @@ def _read_file_for_inline(abs_path: str) -> Tuple[str, bool, int]:
     head_bytes = max(INLINE_CHUNK_HEAD_BYTES, 1)
     tail_bytes = max(INLINE_CHUNK_TAIL_BYTES, 0)
 
-    with open(abs_path, "rb") as handle:
+    with abs_path_obj.open("rb") as handle:
         head = handle.read(head_bytes)
         tail = b""
         if tail_bytes > 0 and size > head_bytes:
@@ -160,10 +179,10 @@ def _read_file_for_inline(abs_path: str) -> Tuple[str, bool, int]:
     return snippet, truncated, bytes_counted
 
 
-def _prepare_inline_payload(directory: str, files: List[str]) -> Tuple[str, List[str]]:
+def _prepare_inline_payload(directory: str, files: list[str]) -> tuple[str, list[str]]:
     """Return stdin payload for inline mode and any warnings."""
-    warnings: List[str] = []
-    file_blocks: List[str] = []
+    warnings: list[str] = []
+    file_blocks: list[str] = []
     total_bytes = 0
     processed = 0
 
@@ -173,9 +192,9 @@ def _prepare_inline_payload(directory: str, files: List[str]) -> Tuple[str, List
 
     for original_path in files:
         abs_path, rel_path = _resolve_path(directory, original_path)
-        display_name = rel_path or os.path.basename(abs_path)
+        display_name = rel_path or Path(abs_path).name
 
-        if not os.path.exists(abs_path):
+        if not Path(abs_path).exists():
             warnings.append(f"Skipped missing file: {display_name}")
             continue
 
@@ -214,14 +233,14 @@ def _prepare_inline_payload(directory: str, files: List[str]) -> Tuple[str, List
     return payload, warnings
 
 
-def _prepare_at_command_prompt(directory: str, files: List[str]) -> Tuple[str, List[str]]:
+def _prepare_at_command_prompt(directory: str, files: list[str]) -> tuple[str, list[str]]:
     """Return prompt lines for @-command usage and warnings."""
-    warnings: List[str] = []
-    prompt_lines: List[str] = []
+    warnings: list[str] = []
+    prompt_lines: list[str] = []
 
     for original_path in files:
         abs_path, rel_path = _resolve_path(directory, original_path)
-        if not os.path.exists(abs_path):
+        if not Path(abs_path).exists():
             warnings.append(f"Skipped missing file: {original_path}")
             continue
         if rel_path is None:
@@ -241,8 +260,8 @@ def _prepare_at_command_prompt(directory: str, files: List[str]) -> Tuple[str, L
 def execute_gemini_simple(
     query: str,
     directory: str = ".",
-    model: Optional[str] = None,
-    timeout_seconds: Optional[int] = None,
+    model: str | None = None,
+    timeout_seconds: int | None = None,
 ) -> str:
     """
     Execute gemini CLI command for simple queries without file attachments.
@@ -258,9 +277,9 @@ def execute_gemini_simple(
     # Check if gemini CLI is available
     if not shutil.which("gemini"):
         return "Error: Gemini CLI not found. Install with: npm install -g @google/gemini-cli"
-    
+
     # Validate directory
-    if not os.path.isdir(directory):
+    if not Path(directory).is_dir():
         return f"Error: Directory does not exist: {directory}"
     
     # Build command - use stdin for input to avoid hanging
@@ -282,10 +301,19 @@ def execute_gemini_simple(
         if result.returncode == 0:
             return result.stdout.strip() if result.stdout.strip() else "No output from Gemini CLI"
         else:
-            return f"Gemini CLI Error: {result.stderr.strip()}"
-            
+            error_msg = result.stderr.strip()
+            # Provide helpful suggestions for common errors
+            if "not available" in error_msg.lower() or "unauthorized" in error_msg.lower():
+                return f"Gemini CLI Error: Model '{selected_model}' may not be available for your account. Try: 'flash', 'flash-lite', or 'auto'. Details: {error_msg}"
+            elif "authentication" in error_msg.lower() or "auth" in error_msg.lower():
+                return f"Gemini CLI Error: Authentication required. Run: gemini auth login. Details: {error_msg}"
+            else:
+                return f"Gemini CLI Error: {error_msg}"
+
     except subprocess.TimeoutExpired:
-        return f"Error: Gemini CLI command timed out after {timeout} seconds"
+        return f"Error: Gemini CLI command timed out after {timeout} seconds. Try increasing timeout or simplifying your query."
+    except FileNotFoundError:
+        return "Error: Gemini CLI not found. Install with: npm install -g @google/gemini-cli"
     except Exception as e:
         return f"Error executing Gemini CLI: {str(e)}"
 
@@ -293,9 +321,9 @@ def execute_gemini_simple(
 def execute_gemini_with_files(
     query: str,
     directory: str = ".",
-    files: Optional[List[str]] = None,
-    model: Optional[str] = None,
-    timeout_seconds: Optional[int] = None,
+    files: list[str] | None = None,
+    model: str | None = None,
+    timeout_seconds: int | None = None,
     mode: str = "inline",
 ) -> str:
     """
@@ -313,9 +341,9 @@ def execute_gemini_with_files(
     # Check if gemini CLI is available
     if not shutil.which("gemini"):
         return "Error: Gemini CLI not found. Install with: npm install -g @google/gemini-cli"
-    
+
     # Validate directory
-    if not os.path.isdir(directory):
+    if not Path(directory).is_dir():
         return f"Error: Directory does not exist: {directory}"
     
     # Validate files parameter
@@ -327,7 +355,7 @@ def execute_gemini_with_files(
     cmd = ["gemini", "-m", selected_model]
 
     mode_normalized = mode.lower()
-    warnings: List[str]
+    warnings: list[str]
 
     if mode_normalized not in {"inline", "at_command"}:
         return f"Error: Unsupported files mode '{mode}'. Use 'inline' or 'at_command'."
@@ -356,7 +384,14 @@ def execute_gemini_with_files(
         if result.returncode == 0:
             output = result.stdout.strip() if result.stdout.strip() else "No output from Gemini CLI"
         else:
-            output = f"Gemini CLI Error: {result.stderr.strip()}"
+            error_msg = result.stderr.strip()
+            # Provide helpful suggestions for common errors
+            if "not available" in error_msg.lower() or "unauthorized" in error_msg.lower():
+                output = f"Gemini CLI Error: Model '{selected_model}' may not be available for your account. Try: 'flash', 'flash-lite', or 'auto'. Details: {error_msg}"
+            elif "authentication" in error_msg.lower() or "auth" in error_msg.lower():
+                output = f"Gemini CLI Error: Authentication required. Run: gemini auth login. Details: {error_msg}"
+            else:
+                output = f"Gemini CLI Error: {error_msg}"
 
         if warnings:
             warning_block = "Warnings:\n" + "\n".join(f"- {w}" for w in warnings)
@@ -364,7 +399,9 @@ def execute_gemini_with_files(
         return output
 
     except subprocess.TimeoutExpired:
-        return f"Error: Gemini CLI command timed out after {timeout} seconds"
+        return f"Error: Gemini CLI command timed out after {timeout} seconds. Try increasing timeout or simplifying your query."
+    except FileNotFoundError:
+        return "Error: Gemini CLI not found. Install with: npm install -g @google/gemini-cli"
     except Exception as e:
         return f"Error executing Gemini CLI: {str(e)}"
 
@@ -416,6 +453,32 @@ def consult_gemini_with_files(
     if not files:
         return "Error: files parameter is required for consult_gemini_with_files"
     return execute_gemini_with_files(query, directory, files, model, timeout_seconds, mode)
+
+
+@mcp.tool()
+def web_search(
+    query: str,
+    directory: str = ".",
+    model: str | None = None,
+    timeout_seconds: int | None = None,
+) -> str:
+    """Ask Gemini queries with web search context.
+
+    Note: This uses Gemini CLI's automatic web search capability.
+    The model determines when to search based on query context.
+    Best-effort web search - not guaranteed for every query.
+
+    Args:
+        query: Search query or question to look up on the web
+        directory: Working directory for command execution
+        model: Optional model alias (flash, pro, or custom)
+        timeout_seconds: Optional per-call timeout override in seconds
+
+    Returns:
+        Gemini's response with potential web sources
+    """
+    search_prompt = f"Please use web search to find current information about: {query}"
+    return execute_gemini_simple(search_prompt, directory, model, timeout_seconds)
 
 
 def main():
