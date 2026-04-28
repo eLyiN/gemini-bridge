@@ -18,10 +18,21 @@ from mcp.server.fastmcp import FastMCP
 
 mcp = FastMCP("gemini-assistant")
 
+# ============================================================================
+# CONFIGURATION - Environment Variables with Sensible Defaults
+# ============================================================================
+
+# Timeout Configuration
+DEFAULT_TIMEOUT = int(os.getenv("GEMINI_BRIDGE_DEFAULT_TIMEOUT", "120"))  # Increased from 60 to 120 seconds
+TRUST_WORKSPACE = os.getenv("GEMINI_BRIDGE_TRUST_WORKSPACE", "true")  # Auto-trust workspaces for MCP usage
+
+# Default Model Configuration
+DEFAULT_MODEL = os.getenv("GEMINI_BRIDGE_DEFAULT_MODEL", "flash")  # Options: flash, pro, flash-lite, auto
+
 # Inline attachment safeguards — tuned for quick, safe transfers.
-MAX_INLINE_FILE_COUNT = int(os.getenv("GEMINI_BRIDGE_MAX_INLINE_FILE_COUNT", "10"))
-MAX_INLINE_TOTAL_BYTES = int(os.getenv("GEMINI_BRIDGE_MAX_INLINE_TOTAL_BYTES", str(512 * 1024)))
-MAX_INLINE_FILE_BYTES = int(os.getenv("GEMINI_BRIDGE_MAX_INLINE_FILE_BYTES", str(256 * 1024)))
+MAX_INLINE_FILE_COUNT = int(os.getenv("GEMINI_BRIDGE_MAX_INLINE_FILE_COUNT", "30"))  # Increased from 10 to 30
+MAX_INLINE_TOTAL_BYTES = int(os.getenv("GEMINI_BRIDGE_MAX_INLINE_TOTAL_BYTES", str(1024 * 1024)))  # 1MB instead of 512KB
+MAX_INLINE_FILE_BYTES = int(os.getenv("GEMINI_BRIDGE_MAX_INLINE_FILE_BYTES", str(512 * 1024)))  # 512KB instead of 256KB
 INLINE_CHUNK_HEAD_BYTES = int(os.getenv("GEMINI_BRIDGE_INLINE_HEAD_BYTES", str(64 * 1024)))
 INLINE_CHUNK_TAIL_BYTES = int(os.getenv("GEMINI_BRIDGE_INLINE_TAIL_BYTES", str(32 * 1024)))
 
@@ -29,7 +40,7 @@ INLINE_CHUNK_TAIL_BYTES = int(os.getenv("GEMINI_BRIDGE_INLINE_TAIL_BYTES", str(3
 def _normalize_model_name(model: str | None) -> str:
     """
     Normalize user-provided model identifiers to canonical Gemini CLI model names.
-    Defaults to gemini-2.5-flash when not provided or unrecognized.
+    Defaults to DEFAULT_MODEL environment variable or gemini-2.5-flash when not provided or unrecognized.
 
     Accepted forms:
     - "flash", "2.5-flash", "gemini-2.5-flash" -> gemini-2.5-flash
@@ -42,7 +53,8 @@ def _normalize_model_name(model: str | None) -> str:
     - "auto" -> auto (model router, lets CLI choose optimal model)
     """
     if not model:
-        return "gemini-2.5-flash"
+        model = DEFAULT_MODEL
+
     value = model.strip().lower()
 
     # Gemini 2.5 aliases
@@ -82,24 +94,24 @@ def _normalize_model_name(model: str | None) -> str:
 def _get_timeout() -> int:
     """
     Get the timeout value from environment variable GEMINI_BRIDGE_TIMEOUT.
-    Defaults to 60 seconds if not set or invalid.
-    
+    Defaults to DEFAULT_TIMEOUT (120 seconds) if not set or invalid.
+
     Returns:
         Timeout value in seconds (positive integer)
     """
     timeout_str = os.getenv("GEMINI_BRIDGE_TIMEOUT")
     if not timeout_str:
-        return 60
+        return DEFAULT_TIMEOUT
 
     try:
         timeout = int(timeout_str)
         if timeout <= 0:
-            logging.warning("Invalid GEMINI_BRIDGE_TIMEOUT value '%s' (must be positive). Using default 60 seconds.", timeout_str)
-            return 60
+            logging.warning("Invalid GEMINI_BRIDGE_TIMEOUT value '%s' (must be positive). Using default %d seconds.", timeout_str, DEFAULT_TIMEOUT)
+            return DEFAULT_TIMEOUT
         return timeout
     except ValueError:
-        logging.warning("Invalid GEMINI_BRIDGE_TIMEOUT value '%s' (must be integer). Using default 60 seconds.", timeout_str)
-        return 60
+        logging.warning("Invalid GEMINI_BRIDGE_TIMEOUT value '%s' (must be integer). Using default %d seconds.", timeout_str, DEFAULT_TIMEOUT)
+        return DEFAULT_TIMEOUT
 
 
 def _coerce_timeout(timeout_seconds: int | None) -> int:
@@ -285,6 +297,10 @@ def execute_gemini_simple(
     # Build command - use stdin for input to avoid hanging
     selected_model = _normalize_model_name(model)
     cmd = ["gemini", "-m", selected_model]
+
+    # Add trust flag for automated environments if enabled
+    if TRUST_WORKSPACE.lower() == "true":
+        cmd.append("--skip-trust")
     
     # Execute CLI command - simple timeout, no retries
     timeout = _coerce_timeout(timeout_seconds)
@@ -353,6 +369,10 @@ def execute_gemini_with_files(
     # Build command - use stdin for input to avoid hanging
     selected_model = _normalize_model_name(model)
     cmd = ["gemini", "-m", selected_model]
+
+    # Add trust flag for automated environments if enabled
+    if TRUST_WORKSPACE.lower() == "true":
+        cmd.append("--skip-trust")
 
     mode_normalized = mode.lower()
     warnings: list[str]
