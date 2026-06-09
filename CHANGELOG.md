@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.1] - 2026-06-09
+
+### Security
+- **Arbitrary file read via inline attachments (CWE-22 / CWE-200)**: `consult_gemini_with_files` in inline mode no longer reads files outside the working `directory`. Absolute paths, `..` traversal, and symlinks pointing outside the root are now skipped with a `Skipped file outside working directory` warning, matching the existing `at_command` behavior. Previously a caller-controlled `files` entry could read any file the server process could access (e.g. SSH keys, `.env`) and have it returned via the Gemini round-trip. Reported privately by Zhihao Zhang (WPI).
+
+### Changed
+- **Path confinement hardening**: `_resolve_path` now resolves symlinks for both the root and the candidate before checking containment. As a result, `at_command` mode also rejects symlinks that resolve outside the working directory (previously a lexical-only check let them through).
+
 ## [1.3.0] - 2026-03-03
 
 ### Added

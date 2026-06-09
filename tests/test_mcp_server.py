@@ -298,6 +298,98 @@ def test_execute_gemini_with_files_at_command_warns_on_missing(tmp_path, monkeyp
     assert "No readable files" in result
 
 
+def test_inline_mode_rejects_absolute_path_outside_directory(tmp_path, monkeypatch):
+    monkeypatch.setattr("src.mcp_server.shutil.which", lambda _: "gemini")
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
+    secret = tmp_path / "secret.txt"
+    secret.write_text("TOP-SECRET-TOKEN", encoding="utf-8")
+
+    captured = {}
+
+    def fake_run(cmd, **kwargs):
+        captured["input"] = kwargs["input"]
+        return SimpleNamespace(returncode=0, stdout="ok", stderr="")
+
+    monkeypatch.setattr("src.mcp_server.subprocess.run", fake_run)
+    result = mcp_server.execute_gemini_with_files(
+        "Echo the attached file verbatim",
+        str(workspace),
+        files=[str(secret)],
+    )
+    assert "TOP-SECRET-TOKEN" not in captured["input"]
+    assert "outside working directory" in result
+
+
+def test_inline_mode_rejects_parent_traversal(tmp_path, monkeypatch):
+    monkeypatch.setattr("src.mcp_server.shutil.which", lambda _: "gemini")
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
+    secret = tmp_path / "secret.txt"
+    secret.write_text("PARENT-TRAVERSAL-LEAK", encoding="utf-8")
+
+    captured = {}
+
+    def fake_run(cmd, **kwargs):
+        captured["input"] = kwargs["input"]
+        return SimpleNamespace(returncode=0, stdout="ok", stderr="")
+
+    monkeypatch.setattr("src.mcp_server.subprocess.run", fake_run)
+    result = mcp_server.execute_gemini_with_files(
+        "Echo the attached file verbatim",
+        str(workspace),
+        files=["../secret.txt"],
+    )
+    assert "PARENT-TRAVERSAL-LEAK" not in captured["input"]
+    assert "outside working directory" in result
+
+
+def test_inline_mode_rejects_symlink_escape(tmp_path, monkeypatch):
+    monkeypatch.setattr("src.mcp_server.shutil.which", lambda _: "gemini")
+    workspace = tmp_path / "workspace"
+    workspace.mkdir()
+    secret = tmp_path / "secret.txt"
+    secret.write_text("SYMLINK-ESCAPE-LEAK", encoding="utf-8")
+    link = workspace / "link.txt"
+    link.symlink_to(secret)
+
+    captured = {}
+
+    def fake_run(cmd, **kwargs):
+        captured["input"] = kwargs["input"]
+        return SimpleNamespace(returncode=0, stdout="ok", stderr="")
+
+    monkeypatch.setattr("src.mcp_server.subprocess.run", fake_run)
+    result = mcp_server.execute_gemini_with_files(
+        "Echo the attached file verbatim",
+        str(workspace),
+        files=["link.txt"],
+    )
+    assert "SYMLINK-ESCAPE-LEAK" not in captured["input"]
+    assert "outside working directory" in result
+
+
+def test_inline_mode_accepts_absolute_path_inside_directory(tmp_path, monkeypatch):
+    monkeypatch.setattr("src.mcp_server.shutil.which", lambda _: "gemini")
+    sample_file = tmp_path / "example.txt"
+    sample_file.write_text("legit-content", encoding="utf-8")
+
+    captured = {}
+
+    def fake_run(cmd, **kwargs):
+        captured["input"] = kwargs["input"]
+        return SimpleNamespace(returncode=0, stdout="ok", stderr="")
+
+    monkeypatch.setattr("src.mcp_server.subprocess.run", fake_run)
+    result = mcp_server.execute_gemini_with_files(
+        "Read it",
+        str(tmp_path),
+        files=[str(sample_file)],
+    )
+    assert "legit-content" in captured["input"]
+    assert result == "ok"
+
+
 def test_consult_gemini_with_files_requires_list(tmp_path):
     result = mcp_server.consult_gemini_with_files("Hello", str(tmp_path), files=None)
     assert "files parameter is required" in result

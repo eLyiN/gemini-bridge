@@ -127,20 +127,23 @@ def _coerce_timeout(timeout_seconds: int | None) -> int:
 
 
 def _resolve_path(directory: str, candidate: str) -> tuple[str, str | None]:
-    """Return absolute path and relative display path rooted at directory."""
+    """Return absolute path and a display path confined to ``directory``.
+
+    ``rel_path`` is ``None`` when the candidate escapes the directory root via
+    an absolute path, ``..`` traversal, or a symlink pointing outside it.
+    Both the root and the candidate are resolved (symlinks followed) so the
+    containment check cannot be bypassed; callers must refuse a ``None``.
+    """
+    root = Path(directory).resolve()
     candidate_path = Path(candidate)
     abs_path = (
-        str(candidate_path)
-        if candidate_path.is_absolute()
-        else str(Path(directory) / candidate)
-    )
+        candidate_path if candidate_path.is_absolute() else root / candidate
+    ).resolve()
     try:
-        rel_path = os.path.relpath(abs_path, directory)
+        rel_path = str(abs_path.relative_to(root))
     except ValueError:
         rel_path = None
-    if rel_path and rel_path.startswith(".."):
-        rel_path = None
-    return abs_path, rel_path
+    return str(abs_path), rel_path
 
 
 def _read_file_for_inline(abs_path: str) -> tuple[str, bool, int]:
@@ -192,7 +195,12 @@ def _prepare_inline_payload(directory: str, files: list[str]) -> tuple[str, list
 
     for original_path in files:
         abs_path, rel_path = _resolve_path(directory, original_path)
-        display_name = rel_path or Path(abs_path).name
+        if rel_path is None:
+            warnings.append(
+                f"Skipped file outside working directory: {original_path}",
+            )
+            continue
+        display_name = rel_path
 
         if not Path(abs_path).exists():
             warnings.append(f"Skipped missing file: {display_name}")
@@ -441,7 +449,8 @@ def consult_gemini_with_files(
     Args:
         query: Prompt text forwarded to the CLI.
         directory: Working directory used for resolving relative file paths.
-        files: Relative or absolute file paths to include alongside the prompt.
+        files: File paths to include alongside the prompt. Paths must resolve
+            inside ``directory``; entries pointing outside it are skipped.
         model: Optional model alias (``flash``, ``pro``) or full Gemini model id.
         timeout_seconds: Optional per-call timeout override in seconds.
         mode: ``"inline"`` streams truncated snippets; ``"at_command"`` emits
