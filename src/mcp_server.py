@@ -14,9 +14,9 @@ import shutil
 import subprocess
 from pathlib import Path
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server.mcpserver import MCPServer
 
-mcp = FastMCP("gemini-assistant")
+mcp = MCPServer("gemini-assistant")
 
 # Inline attachment safeguards — tuned for quick, safe transfers.
 MAX_INLINE_FILE_COUNT = int(os.getenv("GEMINI_BRIDGE_MAX_INLINE_FILE_COUNT", "10"))

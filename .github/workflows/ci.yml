@@ -46,6 +46,10 @@ jobs:
       run: |
         pip install pytest
 
+    - name: Run MCP handshake regression test
+      run: |
+        python tests/test_mcp_handshake.py
+
     - name: Run tests
       run: |
         pytest
