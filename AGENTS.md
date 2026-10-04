@@ -34,3 +34,50 @@ The server supports multiple Gemini models through aliases:
 - `auto` → lets CLI choose optimal model
 
 Custom models prefixed with `gemini-` are passed through directly.
+
+
+# Working from GitHub issues
+
+GitHub is the work queue. Pick work from the repo's **Agent queue** view.
+
+## The board
+
+- Each repo has a user-level **Project** named `<Repo> Development` (owner `eLyiN`):
+  halo #16, biwenger-bot #17, codex-bridge #18, gemini-bridge #19,
+  shelakh-web-solutions #20, doculegal #4
+  (https://github.com/users/eLyiN/projects/<number>).
+- Status is `Backlog` -> `Ready` -> `In progress` -> `In review` -> `Done`.
+
+## Status transitions
+
+- `Backlog -> Ready`: when the blockers are closed and the work is fully
+  specified. The owner does this when unblocking an issue; agents may do it
+  only when the last "blocked by" of that issue is closed and the issue has
+  full acceptance criteria.
+- `Ready -> In progress`: when starting work. Do this before branching.
+- `In review`: opening the PR with `Closes #<n>` sets this automatically.
+- `Done`: merge (or close) sets it automatically.
+
+## Labels
+
+- Type: `feat`, `fix`, `chore`, `docs`, `design`, `gate`.
+- Area: `area:<part>` for the parts that exist in this repo
+  (`area:web`, `area:api`, `area:ai`, `area:worker`, `area:db`,
+  `area:landing`, `area:infra`).
+- Agent gates: `agent-ready` (small, fully specified, unblocked: an agent can
+  take it end to end), `needs-design` (do the design pass first),
+  `needs-decision` (blocked on the owner: do not start it, ask).
+- The user's project number for this repo, in comments when useful.
+
+## How to pick and close work
+
+1. Take an issue that appears in the repo's **Agent queue** view
+   (`status:Ready -label:needs-decision -label:needs-design`) and has no open
+   "blocked by". Do not start anything in `Backlog`.
+2. Move it to `In progress` and branch: `<type>/<short-slug>`
+   (for example `feat/sign-in-redirect`).
+3. Open the PR with `Closes #<n>`; the issue moves to `In review` on its own.
+4. On merge the issue closes and moves to `Done`.
+5. When an issue closes, move any blocked issue whose blockers are now all
+   closed from `Backlog` to `Ready`, unless it is `needs-design` or
+   `needs-decision`.
